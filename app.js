@@ -9,18 +9,20 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/*
 async function main() {
     console.log(await insertDataFunctions.deleteAllUsers());
     await insertDataFunctions.insertUser("Sebastian", "Sztolberg", "ssztolbe@stevens.edu", "Gamer@1805");
     await closeConnection();
 }
 main();
+*/
 
-/*
+
 const app = express();
 
 // connect ./public to static middleware
-app.use("public", express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname, "public")));
 
 // other middleware
 // ADD PER LECTURE CODE
@@ -43,4 +45,3 @@ app.get("/templateTest", (req, res) => {
 app.listen(3000, () => {
     console.log("Server is running!");
 })
-*/
