@@ -3,15 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/main_styles.css">
+    <link rel="stylesheet" href={{topBarStyleSheet}}>
+    <link rel="stylesheet" href={{pageStyleSheet}}>
     <title>{{title}}</title>
 </head>
 <body>
+    {{> topBar}}
     {{{body}}}
-    <footer>
-        <p>
-            huh
-        </p>
-    </footer>
+    <script src="/script/main.js"></script>
 </body>
 </html>

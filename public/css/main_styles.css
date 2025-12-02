@@ -1,14 +1,8 @@
-h1 {
-    color: #a32638;
-    font-family: 'Courier New', Courier, monospace;
+#description {
+    margin-top: 10px;
+    border: 1px solid;
 }
 
-h2,h3 {
-    color: #004380;
-    font-family: 'Courier New', Courier, monospace;
-}
-
-p {
-    font-family: 'Courier New', Courier, monospace;
-    font-weight: bold;
+#submitQuestions {
+    margin-top: 10px;
 }

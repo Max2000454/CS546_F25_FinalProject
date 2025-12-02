@@ -33,12 +33,17 @@ app.set("view engine", "handlebars");
 
 // main page
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, 'static', 'main.html'));
+    res.sendFile(path.join(__dirname, "static", "main.html"));
 })
 
-// handlebar testing
-app.get("/templateTest", (req, res) => {
-    res.render("./main/test", {title : "test"});
+// main page (actually)
+app.get("/main", (req, res) => {
+    res.render("main/mainpage.handlebars", {
+        topBarStyleSheet : "/css/topBar.css", 
+        pageStyleSheet : "/css/main_styles.css",
+        title : "Main Page", 
+        topBar: "./views/main/topBar.handlebars",
+    });
 })
 
 // run app
