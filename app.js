@@ -33,7 +33,8 @@ app.set("view engine", "handlebars");
 
 // main page
 app.get("/", (req, res) => {
-    res.sendFile(path.join(__dirname, "static", "main.html"));
+    //res.sendFile(path.join(__dirname, "static", "main.html"));
+    res.redirect("/main");
 })
 
 // main page (actually)
