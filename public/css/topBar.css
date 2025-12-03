@@ -1,4 +1,4 @@
-/* MAIN TOP BAR STYLES */
+/* MAIN STYLES */
 #topBar {
     background-color: #004380;
     overflow: hidden;
@@ -8,7 +8,6 @@
 
 #topBar p, #topBar h1, #topBar h2, #topBar h3, #topBar a {
     color: white;
-    font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
 
 #topBar a:hover {
@@ -49,9 +48,11 @@
     margin-top: 20px;
 }
 
+/*
 #topBar #navBar a:first-child {
     padding-left: 0px;
 }
+*/
 
 /* TOP BAR LOGIN BAR STYLES */
 #topBar #loginBar {
@@ -69,6 +70,8 @@
     margin-top: 20px;
 }
 
+/*
 #topBar #loginBar a:first-child {
     padding-left: 0px;
 }
+*/

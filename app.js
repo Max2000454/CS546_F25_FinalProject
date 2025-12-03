@@ -40,10 +40,69 @@ app.get("/", (req, res) => {
 app.get("/main", (req, res) => {
     res.render("main/mainpage.handlebars", {
         topBarStyleSheet : "/css/topBar.css", 
-        pageStyleSheet : "/css/main_styles.css",
+        pageStyleSheet : "/css/mainPage.css",
         title : "Main Page", 
         topBar: "./views/main/topBar.handlebars",
     });
+})
+
+// awarded contracts
+app.get("/awardedContracts", (req, res) => {
+    res.render("main/awardedContracts.handlebars", {
+        topBarStyleSheet : "/css/topBar.css", 
+        pageStyleSheet : "/css/awardedContracts.css",
+        title : "Awarded Contracts", 
+        topBar: "./views/main/topBar.handlebars",
+        contracts: [
+            {name : "Contract1", awardee: "Sebastian Industries", amount: "$100000000", date: "12/02/2025", description: "This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now."},
+            {name : "Contract1", awardee: "Sebastian Industries", amount: "$100000000", date: "12/02/2025", description: "This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now."},
+        ],
+    })
+})
+
+// VENDOR ROUTES:
+
+app.get("/vendorLogin", (req, res) => {
+    res.render("main/vendorLogin.handlebars", {
+        topBarStyleSheet : "/css/topBar.css", 
+        pageStyleSheet : "/css/vendorLogin.css",
+        title : "Vendor Login", 
+        topBar: "./views/main/topBar.handlebars",
+    })
+})
+
+app.get("/vendorRegister", (req, res) => {
+    
+})
+
+app.get("/openBids", (req, res) => {
+    
+})
+
+app.get("/yourBids", (req, res) => {
+    
+})
+
+app.get("/ratingSystem", (req, res) => { // optional
+    
+})
+
+// ADMIN ROUTES:
+
+app.get("/adminLogin", (req, res) => {
+    
+})
+
+app.get("/bididngPortal", (req, res) => {
+    
+})
+
+app.get("/analytics", (req, res) => {
+    
+})
+
+app.get("/questions", (req, res) => { // optional
+    
 })
 
 // run app

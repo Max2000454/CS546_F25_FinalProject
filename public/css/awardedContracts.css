@@ -1,0 +1,22 @@
+/* MAIN STYlES */
+.contract {
+    margin: 10px;
+    border: 1px solid;
+}
+
+/* CONTRACT HEAD STYlES */
+.contract .contractHead {
+    padding: 1px;
+    background-color: #004380;
+}
+
+.contract .contractHead h1 {
+    margin-left: 10px;
+    color: white;
+}
+
+/* CONTRACT BODY STYlES */
+.contract .contractBody {
+    margin: 10px;
+}
+

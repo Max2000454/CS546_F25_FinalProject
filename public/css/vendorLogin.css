@@ -1,0 +1,60 @@
+#login {
+    margin: 50px auto;
+    max-width: 500px;
+    border: 1px solid;
+}
+
+#login #loginHead {
+    background-color: #004380;
+    padding: 1px;
+
+}
+
+#login #loginHead h2 {
+    color: white;
+    text-align: center;
+}
+
+#login #loginBody {
+    padding: 20px;
+    text-align: center;
+}
+
+#login #loginBody #loginForm #usernameContainer {
+    display: grid;
+    gap: 10px;
+    text-align: left;
+    max-width: 60%;
+}
+
+#login #loginBody #loginForm #passwordContainer {
+    margin-top: 20px;
+    display: grid;
+    gap: 10px;
+    text-align: left;
+    max-width: 60%;
+}
+
+#login #loginBody #loginForm #buttonContainer {
+    margin: 100px auto;
+    margin-bottom: 10px;
+    display: grid;
+    gap: 10px;
+    max-width: 60%;
+}
+
+#login #loginBody #loginForm #buttonContainer #loginButton {
+    background-color: #004380;
+    color: white;
+}
+
+#login #loginBody #loginForm #buttonContainer #createAccountButton {
+    background-color: #004380;
+    color: white;
+}
+
+#login #loginBody #loginForm #buttonContainer #createAccountButton:hover {
+    color: rgb(0, 110, 255);
+    text-decoration: underline;
+    cursor: pointer;
+}
