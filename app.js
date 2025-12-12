@@ -1,10 +1,12 @@
 import insertDataFunctions from "./data/usersData.js";
 import { closeConnection } from "./database_setup/mongoConnection.js";
 
-import express from "express"
-import exphbs from"express-handlebars"
+import express from "express";
+import exphbs from "express-handlebars";
 import path from "path";
 import { fileURLToPath } from "url";
+import session from "express-session";
+import bcrypt from "bcrypt";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -21,92 +23,186 @@ main();
 
 const app = express();
 
-// connect ./public to static middleware
-app.use(express.static(path.join(__dirname, "public")));
+app.use(express.static(path.join(__dirname,"public")));
+app.use(express.urlencoded({extended:true}));
+app.use(express.json());
 
-// other middleware
-// ADD PER LECTURE CODE
+app.use(
+    session({
+        name:"AuthSession",
+        secret:"ThisIsASecretKey",
+        resave:false,
+        saveUninitialized:false
+    })
+);
 
-// setup handlebars, html templating
-app.engine("handlebars", exphbs.engine({defaultLayout: "main"}));
-app.set("view engine", "handlebars");
+app.engine("handlebars",exphbs.engine({defaultLayout:"main"}));
+app.set("view engine","handlebars");
 
-// main page
-app.get("/", (req, res) => {
-    //res.sendFile(path.join(__dirname, "static", "main.html"));
-    res.redirect("/main");
-})
+var localVendors = [];
 
-// main page (actually)
-app.get("/main", (req, res) => {
-    res.render("main/mainpage.handlebars", {
-        topBarStyleSheet : "/css/topBar.css", 
-        pageStyleSheet : "/css/mainPage.css",
-        title : "Main Page", 
-        topBar: "./views/main/topBar.handlebars",
+var initializeLocalVendors = async function(){
+    var hashedPassword = await bcrypt.hash("password123",10);
+    localVendors.push({
+        username:"vendor1",
+        hashedPassword:hashedPassword
     });
-})
+};
 
-// awarded contracts
-app.get("/awardedContracts", (req, res) => {
-    res.render("main/awardedContracts.handlebars", {
-        topBarStyleSheet : "/css/topBar.css", 
-        pageStyleSheet : "/css/awardedContracts.css",
-        title : "Awarded Contracts", 
-        topBar: "./views/main/topBar.handlebars",
-        contracts: [
-            {name : "Contract1", awardee: "Sebastian Industries", amount: "$100000000", date: "12/02/2025", description: "This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now."},
-            {name : "Contract1", awardee: "Sebastian Industries", amount: "$100000000", date: "12/02/2025", description: "This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now. This is a basic description that we can use as filler for now."},
-        ],
-    })
-})
+await initializeLocalVendors();
 
-// VENDOR ROUTES:
+app.get("/",function(req,res){
+    res.redirect("/main");
+});
 
-app.get("/vendorLogin", (req, res) => {
-    res.render("main/vendorLogin.handlebars", {
-        topBarStyleSheet : "/css/topBar.css", 
-        pageStyleSheet : "/css/vendorLogin.css",
-        title : "Vendor Login", 
-        topBar: "./views/main/topBar.handlebars",
-    })
-})
+app.get("/main",function(req,res){
+    res.render("main/mainPage.handlebars",{
+        topBarStyleSheet:"/css/topBar.css",
+        pageStyleSheet:"/css/mainPage.css",
+        title:"Main Page"
+    });
+});
 
-app.get("/vendorRegister", (req, res) => {
-    
-})
+app.get("/awardedContracts",function(req,res){
+    res.render("main/awardedContracts.handlebars",{
+        topBarStyleSheet:"/css/topBar.css",
+        pageStyleSheet:"/css/awardedContracts.css",
+        title:"Awarded Contracts",
+        contracts:[
+            {name:"Contract1",awardee:"Sebastian Industries",amount:"$100000",date:"12/02/2025",description:"Example description"},
+            {name:"Contract2",awardee:"Jaran Solutions",amount:"$50000",date:"12/03/2025",description:"Example description"}
+        ]
+    });
+});
+app.get("/vendorRegister",function(req,res){
+    res.render("main/vendorRegister.handlebars",{
+        title:"Vendor Register",
+        topBarStyleSheet:"/css/topBar.css",
+        pageStyleSheet:"/css/vendorLogin.css"
+    });
+});
 
-app.get("/openBids", (req, res) => {
-    
-})
+app.post("/vendorRegister",async function(req,res){
+    var username = req.body.username;
+    var password = req.body.password;
+    var output = "";
 
-app.get("/yourBids", (req, res) => {
-    
-})
+    if(!username || !password){
+        output = "Missing username or password";
+        return res.render("main/vendorRegister.handlebars",{
+            error:output,
+            title:"Vendor Register",
+            topBarStyleSheet:"/css/topBar.css",
+            pageStyleSheet:"/css/vendorLogin.css"
+        });
+    }
 
-app.get("/ratingSystem", (req, res) => { // optional
-    
-})
+    for(var x=0;x<localVendors.length;x++){
+        if(localVendors[x].username === username){
+            output = "Username already exists";
+            return res.render("main/vendorRegister.handlebars",{
+                error:output,
+                title:"Vendor Register",
+                topBarStyleSheet:"/css/topBar.css",
+                pageStyleSheet:"/css/vendorLogin.css"
+            });
+        }
+    }
 
-// ADMIN ROUTES:
+    var hashedPassword = await bcrypt.hash(password,10);
 
-app.get("/adminLogin", (req, res) => {
-    
-})
+    localVendors.push({
+        username:username,
+        hashedPassword:hashedPassword
+    });
 
-app.get("/bididngPortal", (req, res) => {
-    
-})
+    req.session.vendor = username;
+    return res.redirect("/openBids");
+});
 
-app.get("/analytics", (req, res) => {
-    
-})
+app.get("/vendorLogin",function(req,res){
+    res.render("main/vendorLogin.handlebars",{
+        topBarStyleSheet:"/css/topBar.css",
+        pageStyleSheet:"/css/vendorLogin.css",
+        title:"Vendor Login"
+    });
+});
 
-app.get("/questions", (req, res) => { // optional
-    
-})
+app.post("/vendorLogin",async function(req,res){
+    var username = req.body.username;
+    var password = req.body.password;
+    var output = false;
 
-// run app
-app.listen(3000, () => {
+    if(!username || !password){
+        output = "Missing username or password";
+        return res.render("main/vendorLogin.handlebars",{
+            error:output,
+            topBarStyleSheet:"/css/topBar.css",
+            pageStyleSheet:"/css/vendorLogin.css",
+            title:"Vendor Login"
+        });
+    }
+
+    for(var x=0;x<localVendors.length;x++){
+        if(localVendors[x].username === username){
+            var passwordMatch = await bcrypt.compare(password,localVendors[x].hashedPassword);
+            if(passwordMatch){
+                req.session.vendor = username;
+                output = true;
+                break;
+            }
+        }
+    }
+
+    if(output === true){
+        return res.redirect("/openBids");
+    }
+
+    output = "Invalid username or password";
+    return res.render("main/vendorLogin.handlebars",{
+        error:output,
+        topBarStyleSheet:"/css/topBar.css",
+        pageStyleSheet:"/css/vendorLogin.css",
+        title:"Vendor Login"
+    });
+});
+
+app.get("/openBids",function(req,res){
+    if(!req.session.vendor){
+        return res.redirect("/vendorLogin");
+    }
+
+    res.render("main/openBids.handlebars",{
+        title:"Open Bids",
+        topBarStyleSheet:"/css/topBar.css"
+    });
+});
+
+app.get("/yourBids",function(req,res){
+    if(!req.session.vendor){
+        return res.redirect("/vendorLogin");
+    }
+
+    res.render("main/yourBids.handlebars",{
+        title:"Your Bids",
+        topBarStyleSheet:"/css/topBar.css"
+    });
+});
+
+app.get("/adminLogin",function(req,res){
+    res.render("main/adminLogin.handlebars",{
+        title:"Admin Login",
+        topBarStyleSheet:"/css/topBar.css"
+    });
+});
+
+app.get("/analytics",function(req,res){
+    res.render("main/analytics.handlebars",{
+        title:"Analytics",
+        topBarStyleSheet:"/css/topBar.css"
+    });
+});
+
+app.listen(3000,function(){
     console.log("Server is running!");
-})
+});

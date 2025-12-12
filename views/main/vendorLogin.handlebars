@@ -1,23 +1,29 @@
 <div id="error">
-    <p hidden></p>
+    {{#if error}}
+    <p>{{error}}</p>
+    {{/if}}
 </div>
+
 <div id="login">
     <div id="loginHead">
         <h2>Vendor Login</h2>
     </div>
+
     <div id="loginBody">
-        <form action="" method="post" form id="loginForm" autocomplete="off">
+        <form action="/vendorLogin" method="POST" id="loginForm" autocomplete="off">
             <div id="usernameContainer">
-                <label for="username" id="usernameLabel">Username</label>
+                <label for="username">Username</label>
                 <input type="text" id="username" name="username" placeholder="Enter username here">
             </div>
+
             <div id="passwordContainer">
-                <label for="password" id="passwordLabel">Password</label>
+                <label for="password">Password</label>
                 <input type="password" id="password" name="password" placeholder="Enter password here">
             </div>
+
             <div id="buttonContainer">
                 <input type="submit" value="Login" id="loginButton">
-                <a id="createAccountButton">Create Account</a>
+                <a id="createAccountButton" href="/vendorRegister">Create Account</a>
             </div>
         </form>
     </div>
@@ -28,3 +34,4 @@
             yup!
     </pre>  -->
 </div>
+<script src="/script/vendorLogin.js"></script>
