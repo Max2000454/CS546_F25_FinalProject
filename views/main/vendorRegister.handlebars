@@ -1,0 +1,31 @@
+<div id="error">
+    {{#if error}}
+    <p>{{error}}</p>
+    {{/if}}
+</div>
+
+<div id="login">
+    <div id="loginHead">
+        <h2>Vendor Registration</h2>
+    </div>
+
+    <div id="loginBody">
+        <form action="/vendorRegister" method="POST" id="registerForm" autocomplete="off">
+            <div id="usernameContainer">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" placeholder="Choose a username">
+            </div>
+
+            <div id="passwordContainer">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="Choose a password">
+            </div>
+
+            <div id="buttonContainer">
+                <input type="submit" value="Register" id="registerButton">
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="/script/vendorRegister.js"></script>

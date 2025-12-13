@@ -1,0 +1,74 @@
+/* REGISTER STYLES */
+#register {
+    margin: 50px auto;
+    max-width: 500px;
+    border: 1px solid;
+}
+
+/* REGISTER HEAD STYLES */
+#register #registerHead {
+    background-color: #004380;
+    padding: 1px;
+
+}
+
+#register #registerHead h2 {
+    color: white;
+    text-align: center;
+}
+
+/* REGISTER BODY STYLES */
+#register #registerBody {
+    padding: 20px;
+    text-align: center;
+}
+
+/* REGISTER USERNAME STYLES */
+/* REGISTER BODY STYLES */
+#register #registerBody #registerForm #usernameContainer {
+    display: grid;
+    gap: 10px;
+    text-align: left;
+    max-width: 60%;
+}
+
+/* REGISTER PASSWORD STYLES */
+#register #registerBody #registerForm #passwordContainer {
+    margin-top: 20px;
+    display: grid;
+    gap: 10px;
+    text-align: left;
+    max-width: 60%;
+}
+
+/* CONFIRM PASSWORD STYLES */
+#register #registerBody #registerForm #confirmPasswordContainer {
+    margin-top: 20px;
+    display: grid;
+    gap: 10px;
+    text-align: left;
+    max-width: 60%;
+}
+
+/* REGISTER BODY BUTTONS STYLES */
+#register #registerBody #registerForm #buttonContainer {
+    margin: 100px auto;
+    margin-bottom: 10px;
+    display: grid;
+    gap: 10px;
+    max-width: 60%;
+}
+
+/* REGISTER BUTTON STYLES */
+#register #registerBody #registerForm #buttonContainer #registerButton {
+    background-color: #004380;
+    color: white;
+    border: none;
+    font-size: 14px;
+    padding: 10px;
+}
+
+#register #registerBody #registerForm #buttonContainer #registerButton:hover {
+    background-color: rgb(2, 2, 41);
+    cursor: pointer;
+}

@@ -1,9 +1,11 @@
+/* LOGIN STYLES */
 #login {
     margin: 50px auto;
     max-width: 500px;
     border: 1px solid;
 }
 
+/* LOGIN HEAD STYLES */
 #login #loginHead {
     background-color: #004380;
     padding: 1px;
@@ -15,11 +17,13 @@
     text-align: center;
 }
 
+/* LOGIN BODY STYLES */
 #login #loginBody {
     padding: 20px;
     text-align: center;
 }
 
+/* LOGIN USERNAME STYLES */
 #login #loginBody #loginForm #usernameContainer {
     display: grid;
     gap: 10px;
@@ -27,6 +31,7 @@
     max-width: 60%;
 }
 
+/* LOGIN PASSWORD STYLES */
 #login #loginBody #loginForm #passwordContainer {
     margin-top: 20px;
     display: grid;
@@ -35,6 +40,7 @@
     max-width: 60%;
 }
 
+/* LOGIN BODY BUTTONS STYLES */
 #login #loginBody #loginForm #buttonContainer {
     margin: 100px auto;
     margin-bottom: 10px;
@@ -43,18 +49,29 @@
     max-width: 60%;
 }
 
+/* LOGIN BUTTON STYLES */
 #login #loginBody #loginForm #buttonContainer #loginButton {
     background-color: #004380;
     color: white;
+    border: none;
+    font-size: 14px;
+    padding: 10px;
 }
 
+#login #loginBody #loginForm #buttonContainer #loginButton:hover {
+    background-color: rgb(2, 2, 41);
+    cursor: pointer;
+}
+
+/* REGISTER BUTTON STYLES */
 #login #loginBody #loginForm #buttonContainer #createAccountButton {
     background-color: #004380;
     color: white;
+    font-size: 14px;
+    padding: 10px;
 }
 
 #login #loginBody #loginForm #buttonContainer #createAccountButton:hover {
-    color: rgb(0, 110, 255);
-    text-decoration: underline;
+    background-color: rgb(2, 2, 41);
     cursor: pointer;
 }
