@@ -1,4 +1,5 @@
 import insertDataFunctions from "./data/usersData.js";
+import vendorsData from "./data/vendorsData.js";
 import { closeConnection } from "./database_setup/mongoConnection.js";
 
 import express from "express";
@@ -39,18 +40,6 @@ app.use(
 app.engine("handlebars",exphbs.engine({defaultLayout:"main"}));
 app.set("view engine","handlebars");
 
-var localVendors = [];
-
-var initializeLocalVendors = async function(){
-    var hashedPassword = await bcrypt.hash("password123",10);
-    localVendors.push({
-        username:"vendor1",
-        hashedPassword:hashedPassword
-    });
-};
-
-await initializeLocalVendors();
-
 app.get("/",function(req,res){
     res.redirect("/main");
 });
@@ -83,41 +72,45 @@ app.get("/vendorRegister",function(req,res){
 });
 
 app.post("/vendorRegister",async function(req,res){
-    var username = req.body.username;
-    var password = req.body.password;
-    var output = "";
+    var businessName = req.body.username;
+    var phoneNumber = req.body.password;
+    var email = req.body.email || null;
 
-    if(!username || !password){
-        output = "Missing username or password";
+    if(!businessName || !phoneNumber){
         return res.render("main/vendorRegister.handlebars",{
-            error:output,
+            error:"Missing business name or phone number",
             title:"Vendor Register",
             topBarStyleSheet:"/css/topBar.css",
             pageStyleSheet:"/css/vendorLogin.css"
         });
     }
 
-    for(var x=0;x<localVendors.length;x++){
-        if(localVendors[x].username === username){
-            output = "Username already exists";
+    try {
+        // check if vendor already exists
+        const vendorExists = await vendorsData.checkVendorExists(businessName);
+        if(vendorExists){
             return res.render("main/vendorRegister.handlebars",{
-                error:output,
+                error:"Business name already exists",
                 title:"Vendor Register",
                 topBarStyleSheet:"/css/topBar.css",
                 pageStyleSheet:"/css/vendorLogin.css"
             });
         }
+
+        // register new vendor
+        await vendorsData.registerNewVendor(businessName, phoneNumber, email);
+
+        req.session.vendor = businessName;
+        return res.redirect("/openBids");
+    } catch(error) {
+        console.error("Vendor registration error:", error);
+        return res.render("main/vendorRegister.handlebars",{
+            error:"An error occurred during registration",
+            title:"Vendor Register",
+            topBarStyleSheet:"/css/topBar.css",
+            pageStyleSheet:"/css/vendorLogin.css"
+        });
     }
-
-    var hashedPassword = await bcrypt.hash(password,10);
-
-    localVendors.push({
-        username:username,
-        hashedPassword:hashedPassword
-    });
-
-    req.session.vendor = username;
-    return res.redirect("/openBids");
 });
 
 app.get("/vendorLogin",function(req,res){
@@ -129,42 +122,41 @@ app.get("/vendorLogin",function(req,res){
 });
 
 app.post("/vendorLogin",async function(req,res){
-    var username = req.body.username;
-    var password = req.body.password;
-    var output = false;
+    var businessName = req.body.username;
+    var phoneNumber = req.body.password;
 
-    if(!username || !password){
-        output = "Missing username or password";
+    if(!businessName || !phoneNumber){
         return res.render("main/vendorLogin.handlebars",{
-            error:output,
+            error:"Missing business name or phone number",
             topBarStyleSheet:"/css/topBar.css",
             pageStyleSheet:"/css/vendorLogin.css",
             title:"Vendor Login"
         });
     }
 
-    for(var x=0;x<localVendors.length;x++){
-        if(localVendors[x].username === username){
-            var passwordMatch = await bcrypt.compare(password,localVendors[x].hashedPassword);
-            if(passwordMatch){
-                req.session.vendor = username;
-                output = true;
-                break;
-            }
+    try {
+        const vendorDocument = await vendorsData.validateVendorLogin(businessName, phoneNumber);
+
+        if(vendorDocument){
+            req.session.vendor = businessName;
+            return res.redirect("/openBids");
         }
-    }
 
-    if(output === true){
-        return res.redirect("/openBids");
+        return res.render("main/vendorLogin.handlebars",{
+            error:"Invalid business name or phone number",
+            topBarStyleSheet:"/css/topBar.css",
+            pageStyleSheet:"/css/vendorLogin.css",
+            title:"Vendor Login"
+        });
+    } catch(error) {
+        console.error("Vendor login error:", error);
+        return res.render("main/vendorLogin.handlebars",{
+            error:"An error occurred during login",
+            topBarStyleSheet:"/css/topBar.css",
+            pageStyleSheet:"/css/vendorLogin.css",
+            title:"Vendor Login"
+        });
     }
-
-    output = "Invalid username or password";
-    return res.render("main/vendorLogin.handlebars",{
-        error:output,
-        topBarStyleSheet:"/css/topBar.css",
-        pageStyleSheet:"/css/vendorLogin.css",
-        title:"Vendor Login"
-    });
 });
 
 app.get("/openBids",function(req,res){
