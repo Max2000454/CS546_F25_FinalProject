@@ -1,0 +1,29 @@
+<div id="heroSection">
+    <h1>Feedback Portal</h1>
+    <p>Review all user feedback submissions</p>
+</div>
+
+<div id="feedbackListSection">
+    {{#if feedbackList.length}}
+        <div class="feedback-header">
+            <h2>User Feedback</h2>
+            <span class="feedback-count">{{feedbackList.length}} total submissions</span>
+        </div>
+        
+        <div class="feedback-list">
+            {{#each feedbackList}}
+            <div class="feedback-item">
+                <div class="feedback-content">
+                    <p class="feedback-message">{{this.message}}</p>
+                </div>
+            </div>
+            {{/each}}
+        </div>
+    {{else}}
+        <div class="no-feedback">
+            <p>No feedback has been submitted yet.</p>
+        </div>
+    {{/if}}
+    
+    <a href="/biddingPortal" class="actionButton">Back to Admin Portal</a>
+</div>

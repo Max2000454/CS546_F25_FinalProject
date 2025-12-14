@@ -2,7 +2,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import {Router} from "express";
-
+import { openConnection } from "../database_setup/mongoConnection.js";
 import vendorsData from "../data/vendorsData.js";
 import bidsData from "../data/bidsData.js";
 
@@ -76,9 +76,24 @@ router.get("/analytics",function(req,res){
     });
 });
 
-router.get("/questions", (req, res) => { // optional
-    res.redirect("/main");
-})
+router.get("/adminFeedback", async (req, res) => {
+  try {
+    const db = await openConnection();
+    const feedbackCollection = db.collection('feedback');
+    const allFeedback = await feedbackCollection.find({}).toArray();
+    
+    res.render("main/adminFeedback.handlebars", {
+      title: "Admin Feedback Portal",
+      pageStyleSheet: "/css/adminFeedback.css",
+      vendorLoggedIn: req.session.vendor,
+      adminLoggedIn: req.session.admin,
+      feedbackList: allFeedback
+    });
+  } catch (error) {
+    console.error('Error fetching feedback:', error);
+    res.redirect("/biddingPortal?message=Error%20loading%20feedback");
+  }
+});
 
 router.get("/adminLogout", (req, res) => {
     if (req.session.admin) {

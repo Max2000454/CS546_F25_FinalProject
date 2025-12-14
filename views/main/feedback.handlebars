@@ -1,0 +1,28 @@
+{{#if error}}
+<div id="error">
+    <p>{{error}}</p>
+</div>
+{{/if}}
+
+{{#if success}}
+<div id="success">
+    <p>{{success}}</p>
+</div>
+{{/if}}
+
+<div id="heroSection">
+    <h1>Feedback</h1>
+    <p>
+        Questions? Comments? Concerns?
+        Help us improve the platform by providing your feedback below.
+    </p>
+</div>
+
+<div id="feedbackFormSection">
+    <form method="POST" action="/feedback" class="feedback-form">
+        <div id="feedbackContainer">
+            <textarea id="message" name="message" placeholder="Enter feedback here..." required></textarea>
+        </div>
+        <button type="submit" class="actionButton">Submit Feedback</button>
+    </form>
+</div>

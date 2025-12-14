@@ -18,3 +18,4 @@ const getCollection = (collectionName) => {
 export const vendors = getCollection("Vendors");
 export const contracts = getCollection("Contracts");
 export const bids = getCollection("Bids");
+export const feedback = getCollection("Feedback");
