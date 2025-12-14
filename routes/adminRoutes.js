@@ -3,14 +3,13 @@ import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import {Router} from "express";
 
-import vendorsData from "../data/vendorsData.js";
+import userData from "../data/userData.js";
 import bidsData from "../data/bidsData.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = Router();
-
 
 // ADMIN ROUTES:
 router.get("/adminLogin",function(req,res){

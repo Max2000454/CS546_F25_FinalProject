@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import {Router} from "express";
 
-import vendorsData from "../data/vendorsData.js";
+import userData from "../data/userData.js";
 import bidsData from "../data/bidsData.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,14 +21,13 @@ router.get("/vendorRegister",function(req,res){
     });
 });
 
-router.post("/vendorRegister",async function(req,res){
-    var businessName = req.body.username;
-    var phoneNumber = req.body.password;
-    var email = req.body.email || null;
+router.post("/vendorRegister", async function(req,res){
+    let username = req.body.username;
+    let password = req.body.password;
 
-    if(!businessName || !phoneNumber){
+    if(!username || !password){
         return res.render("main/vendorRegister.handlebars",{
-            error:"Missing business name or phone number",
+            error:"Missing username or password",
             title:"Vendor Register",
             topBarStyleSheet:"/css/topBar.css",
             pageStyleSheet:"/css/vendorLogin.css",
@@ -38,11 +37,11 @@ router.post("/vendorRegister",async function(req,res){
     }
 
     try {
-        // check if vendor already exists
-        const vendorExists = await vendorsData.checkVendorExists(businessName);
-        if(vendorExists){
+        // check if user already exists
+        const userExists = await userData.checkUserExists(username);
+        if(userExists){
             return res.render("main/vendorRegister.handlebars",{
-                error:"Business name already exists",
+                error:`account with username ${username} already exists`,
                 title:"Vendor Register",
                 topBarStyleSheet:"/css/topBar.css",
                 pageStyleSheet:"/css/vendorLogin.css",
@@ -51,15 +50,15 @@ router.post("/vendorRegister",async function(req,res){
             });
         }
 
-        // register new vendor
-        await vendorsData.registerNewVendor(businessName, phoneNumber, email);
-
-        req.session.vendor = businessName;
+        // register new user
+        await userData.insertUser(username, password, "vendor");
+        req.session.vendor = username;
         return res.redirect("/openBids");
+        
     } catch(error) {
         console.error("Vendor registration error:", error);
         return res.render("main/vendorRegister.handlebars",{
-            error:"An error occurred during registration",
+            error:`Error: ${error}`,
             title:"Vendor Register",
             topBarStyleSheet:"/css/topBar.css",
             pageStyleSheet:"/css/vendorLogin.css",
@@ -80,12 +79,12 @@ router.get("/vendorLogin",function(req,res){
 });
 
 router.post("/vendorLogin",async function(req,res){
-    var businessName = req.body.username;
-    var phoneNumber = req.body.password;
+    var username = req.body.username;
+    var password = req.body.password;
 
-    if(!businessName || !phoneNumber){
+    if(!username || !password){
         return res.render("main/vendorLogin.handlebars",{
-            error:"Missing business name or phone number",
+            error:"Missing username or password",
             topBarStyleSheet:"/css/topBar.css",
             pageStyleSheet:"/css/vendorLogin.css",
             title:"Vendor Login",
@@ -95,25 +94,26 @@ router.post("/vendorLogin",async function(req,res){
     }
 
     try {
-        const vendorDocument = await vendorsData.validateVendorLogin(businessName, phoneNumber);
+        const userDocument = await userData.validateUserLogin(username, password);
 
-        if(vendorDocument){
-            req.session.vendor = businessName;
+        if(userDocument){
+            req.session.vendor = username;
             return res.redirect("/openBids");
         }
 
         return res.render("main/vendorLogin.handlebars",{
-            error:"Invalid business name or phone number",
+            error:"Invalid username or password",
             topBarStyleSheet:"/css/topBar.css",
             pageStyleSheet:"/css/vendorLogin.css",
             title:"Vendor Login",
             vendorLoggedIn: req.session.vendor,
             adminLoggedIn: req.session.admin,
         });
+        
     } catch(error) {
         console.error("Vendor login error:", error);
         return res.render("main/vendorLogin.handlebars",{
-            error:"An error occurred during login",
+            error:`Error: ${error}`,
             topBarStyleSheet:"/css/topBar.css",
             pageStyleSheet:"/css/vendorLogin.css",
             title:"Vendor Login",

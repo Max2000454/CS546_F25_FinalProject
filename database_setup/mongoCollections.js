@@ -16,5 +16,7 @@ const getCollection = (collectionName) => {
 
 
 export const vendors = getCollection("Vendors");
-export const contracts = getCollection("Contracts");
+
+export const users = getCollection("Users");
+export const proposals = getCollection("Proposals");
 export const bids = getCollection("Bids");
