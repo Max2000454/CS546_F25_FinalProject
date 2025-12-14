@@ -5,13 +5,32 @@
     </div>
 
     <div id="loginBar">
+        {{#if vendorLoggedIn}}
+        <a href="/vendorLogout">VENDOR LOGOUT</a>
+        {{else if adminLoggedIn}}
+        <a href="/adminLogout">ADMIN LOGOUT</a>
+        {{else}}
         <a href="/vendorLogin">Vendor Login</a>
         <a href="/adminLogin">Admin Login</a>
+        {{/if}}
     </div>
 
     <div id="navBar">
-        <a href="/awardedContracts">Awarded Contracts</a>
-        <a href="/openBids">Place a Bid</a>
-        <a href="/yourBids">View Your Bids</a>
+        {{#if onMainPage}}
+            {{#if vendorLoggedIn}}
+            <a href="/openBids">Place a Bid</a>
+            <a href="/yourBids">View Your Bids</a>
+            <a href="/awardedContracts">Awarded Contracts</a>
+            {{else if adminLoggedIn}}
+            <a href="/questions">Questions</a>
+            <a href="/analytics">Analytics</a>
+            <a href="/biddingPortal">Bidding Portal</a>
+            <a href="/awardedContracts">Awarded Contracts</a>
+            {{else}}
+            <a href="/awardedContracts">Awarded Contracts</a>
+            {{/if}}
+        {{else}}
+        <a href="/main">RETURN TO MAIN PAGE</a>
+        {{/if}}
     </div>
 </div>

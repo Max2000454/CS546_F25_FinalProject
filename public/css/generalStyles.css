@@ -1,3 +1,8 @@
 p, h1, h2, h3, a, label, input, button {
     font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif;
 }
+
+#error {
+    color: #a32638;
+    font-weight: bold;
+}
