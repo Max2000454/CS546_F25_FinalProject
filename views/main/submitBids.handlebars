@@ -1,0 +1,32 @@
+<div id="error">
+    {{#if error}}
+    <p>{{error}}</p>
+    {{/if}}
+</div>
+
+<div class="contract">
+    <div class="contractHead">
+        <h1>Submit Bid</h1>
+    </div>
+
+    <div class="contractBody">
+        <div class="contractInfo">
+            <h2>Contract Information</h2>
+            <p>Contract Name: {{contractName}}</p>
+        </div>
+
+        <div class="bidForm">
+            <form action="/submitBid/{{contractName}}" method="POST">
+                <div class="inputContainer">
+                    <label for="bidAmount">Bid Amount</label>
+                    <input type="text" id="bidAmount" name="bidAmount" placeholder="Enter your bid amount">
+                </div>
+
+                <div class="buttonContainer">
+                    <button type="submit">Submit Bid</button>
+                    <a href="/openBids">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

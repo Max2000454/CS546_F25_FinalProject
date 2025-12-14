@@ -7,21 +7,20 @@
 {{#each contracts}}
 <div class="contract">
     <div class="contractHead">
-        <h1>{{name}}</h1>
+        <h1>{{contractName}}</h1>
     </div>
     <div class="contractBody">
         <div class="awardee">
             <h2>Awardee</h2>
-            <p>{{awardee}}</p>
+            <p>{{vendorName}}</p>
         </div>
         <div class="publicStats">
             <h2>Public Stats</h2>
-            <p>Amount: {{amount}}</p>
-            <p>Awarded on: {{date}}</p>
+            <p>Amount: {{bidAmount}}</p>
         </div>
         <div class="description">
-            <h2>Description</h2>
-            <p>{{description}}</p>
+            <h2>Status</h2>
+            <p>{{status}}</p>
         </div>
     </div>
 </div>

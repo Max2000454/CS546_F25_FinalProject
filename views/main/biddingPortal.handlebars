@@ -1,0 +1,106 @@
+<div id="error">
+    {{#if error}}
+    <p>{{error}}</p>
+    {{/if}}
+</div>
+
+<h1>Admin Portal</h1>
+
+<div class="contract">
+    <div class="contractHead">
+        <h2>Create New Open Contract</h2>
+    </div>
+    <div class="contractBody">
+        <form action="/adminCreateOpenBid" method="POST">
+            <div>
+                <label for="contractName">Contract Name</label>
+                <input type="text" id="contractName" name="contractName">
+            </div>
+
+            <div>
+                <label for="highestBid">Starting Bid</label>
+                <input type="text" id="highestBid" name="highestBid">
+            </div>
+
+            <div>
+                <label for="expirationDate">Expiration Date</label>
+                <input type="text" id="expirationDate" name="expirationDate">
+            </div>
+
+            <div>
+                <label for="description">Description</label>
+                <input type="text" id="description" name="description">
+            </div>
+
+            <div>
+                <label for="imgSrc">Image URL</label>
+                <input type="text" id="imgSrc" name="imgSrc">
+            </div>
+
+            <div>
+                <button type="submit">Create Contract</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="contract">
+    <div class="contractHead">
+        <h2>Open Contracts</h2>
+    </div>
+    <div class="contractBody">
+        {{#each openBids}}
+        <div class="contract">
+            <div class="contractHead">
+                <h3>{{name}}</h3>
+            </div>
+            <div class="contractBody">
+                <p>Starting Bid: {{highestBid}}</p>
+                <p>Expires On: {{expirationDate}}</p>
+                <p>{{description}}</p>
+
+                <form action="/adminDeleteOpenBid" method="POST">
+                    <input type="hidden" name="contractName" value="{{name}}">
+                    <button type="submit">Delete Contract</button>
+                </form>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>
+
+<div class="contract">
+    <div class="contractHead">
+        <h2>Submitted Vendor Bids</h2>
+    </div>
+    <div class="contractBody">
+        {{#each bids}}
+        <div class="contract">
+            <div class="contractHead">
+                <h3>{{contractName}}</h3>
+            </div>
+            <div class="contractBody">
+                <p>Vendor: {{vendorName}}</p>
+                <p>Bid Amount: {{bidAmount}}</p>
+                <p>Status: {{status}}</p>
+
+                <form action="/awardBid" method="POST">
+                    <input type="hidden" name="contractName" value="{{contractName}}">
+                    <input type="hidden" name="vendorName" value="{{vendorName}}">
+                    <button type="submit">Award Bid</button>
+                </form>
+            </div>
+        </div>
+        {{/each}}
+    </div>
+</div>
+
+<div class="contract">
+    <div class="contractHead">
+        <h2>Analytics Summary</h2>
+    </div>
+    <div class="contractBody">
+        <p>Total Bids: {{analytics.totalBids}}</p>
+        <p>Average Bid Amount: {{analytics.averageBid}}</p>
+    </div>
+</div>

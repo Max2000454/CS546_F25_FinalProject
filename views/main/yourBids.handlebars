@@ -9,6 +9,7 @@
     <div class="contractHead">
         <h1>{{name}}</h1>
     </div>
+
     <div class="contractBody">
         <div class="contractInfo">
             <h2>Information</h2>
@@ -16,16 +17,24 @@
             <p>Expires on: {{expirationDate}}</p>
             <p>Your Bid: {{yourBid}}</p>
         </div>
+
         <div class="contractStatus">
             <h2>Status</h2>
             <p>{{status}}</p>
         </div>
+
         {{#if ongoing}}
         <div class="cancelButton">
-            <button>Cancel Bid</button>
+            <form action="/withdrawBid" method="POST">
+                <input type="hidden" name="contractName" value="{{name}}">
+                <button type="submit">Cancel Bid</button>
+            </form>
         </div>
+
         <div class="placeButton">
-            <button>Place Bid</button>
+            <form action="/submitBid/{{name}}" method="GET">
+                <button type="submit">Place New Bid</button>
+            </form>
         </div>
         {{/if}}
     </div>

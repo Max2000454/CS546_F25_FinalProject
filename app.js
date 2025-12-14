@@ -1,5 +1,6 @@
 import vendorsData from "./data/vendorsData.js";
 import { closeConnection } from "./database_setup/mongoConnection.js";
+import bidsData from "./data/bidsData.js";
 
 import express from "express"
 import exphbs from"express-handlebars"
@@ -48,16 +49,16 @@ app.get("/main",function(req,res){
 });
 
 app.get("/awardedContracts",function(req,res){
+    var output = bidsData.getAwardedBids();
+
     res.render("main/awardedContracts.handlebars",{
         topBarStyleSheet:"/css/topBar.css",
         pageStyleSheet:"/css/awardedContracts.css",
         title:"Awarded Contracts",
-        contracts:[
-            {name:"Contract1",awardee:"Sebastian Industries",amount:"$100000",date:"12/02/2025",description:"Example description"},
-            {name:"Contract2",awardee:"Jaran Solutions",amount:"$50000",date:"12/03/2025",description:"Example description"}
-        ]
+        contracts:output
     });
 });
+
 
 // VENDOR ROUTES
 
@@ -157,56 +158,172 @@ app.post("/vendorLogin",async function(req,res){
     }
 });
 
-app.get("/openBids", (req, res) => {
+app.get("/openBids",function(req,res){
     if(!req.session.vendor){
         return res.redirect("/vendorLogin");
     }
 
-    res.render("main/openBids.handlebars", {
-        pageStyleSheet : "/css/openBids.css",
-        title : "Open Bids",
-        contracts : [
-            {name: "Contract1", highestBid: "1,000,000", expirationDate: "12/14/2025", description: "This is a palceholder description for a placeholder contract that will be replaced later, it is static right now!", imgSrc : ""},
-            {name: "Contract1", highestBid: "1,000,000", expirationDate: "12/14/2025", description: "This is a palceholder description for a placeholder contract that will be replaced later, it is static right now!", imgSrc : ""},
-        ]
-    })
-})
+    var openBids = bidsData.getAllOpenBids();
+    var output = [];
 
-app.get("/yourBids", (req, res) => {
+    for(var x=0;x<openBids.length;x++){
+        var highestBidValue = bidsData.getHighestBidForContract(openBids[x].name);
+
+        var bestBid = Number(openBids[x].highestBid);
+        if(highestBidValue !== null && highestBidValue > bestBid){
+            bestBid = highestBidValue;
+        }
+
+        output.push({
+            name:openBids[x].name,
+            highestBid:String(bestBid),
+            expirationDate:openBids[x].expirationDate,
+            description:openBids[x].description,
+            imgSrc:openBids[x].imgSrc
+        });
+    }
+
+    res.render("main/openBids.handlebars",{
+        pageStyleSheet:"/css/openBids.css",
+        title:"Open Bids",
+        contracts:output
+    });
+});
+
+
+
+app.get("/yourBids",function(req,res){
     if(!req.session.vendor){
         return res.redirect("/vendorLogin");
     }
 
-    res.render("main/yourBids.handlebars", {
-        pageStyleSheet : "/css/yourBids.css",
-        title: "Your Bids",
-        contracts: [
-            {name: "Contract1", highestBid: "1,000,000", expirationDate: "12/14/2025", yourBid: "1,000,000", status: "Pending", ongoing : true},
-            {name: "Contract1", highestBid: "1,000,000", expirationDate: "12/13/2025", yourBid: "1,000,000", status: "Finished", ongoing : false},
-        ]
-    })
-})
+    var output = bidsData.getBidsByVendor(req.session.vendor);
+
+    res.render("main/yourBids.handlebars",{
+        pageStyleSheet:"/css/yourBids.css",
+        title:"Your Bids",
+        contracts:output
+    });
+});
+
+
+
+
+app.get("/submitBid/:contractName",function(req,res){
+    if(!req.session.vendor){
+        return res.redirect("/vendorLogin");
+    }
+
+    res.render("main/submitBids.handlebars",{
+        title:"Submit Bid",
+        contractName:req.params.contractName
+    });
+
+});
+
+app.post("/submitBid/:contractName",function(req,res){
+    if(!req.session.vendor){
+        return res.redirect("/vendorLogin");
+    }
+
+    var bidAmount = req.body.bidAmount;
+    if(!bidAmount){
+        return res.redirect("/openBids");
+    }
+
+    bidsData.addBid(req.session.vendor,req.params.contractName,bidAmount);
+    return res.redirect("/yourBids");
+
+});
+
+
+app.post("/withdrawBid",function(req,res){
+    if(!req.session.vendor){
+        return res.redirect("/vendorLogin");
+    }
+
+    bidsData.withdrawBid(req.session.vendor,req.body.contractName);
+    return res.redirect("/yourBids");
+});
 
 app.get("/ratingSystem", (req, res) => { // optional
     res.redirect("/main");
 })
 
 // ADMIN ROUTES:
+app.get("/adminLogin",function(req,res){
+    res.render("main/adminLogin.handlebars",{
+        pageStyleSheet:"/css/adminLogin.css",
+        title:"Admin Login"
+    });
+});
 
-app.get("/adminLogin", (req, res) => {
-    res.render("main/adminLogin.handlebars", {
-        pageStyleSheet : "/css/adminLogin.css",
-        title: "Admin Login",
-    })
-})
+app.post("/adminLogin",function(req,res){
+    if(req.body.username === "admin" && req.body.password === "admin"){
+        req.session.admin = true;
+        return res.redirect("/biddingPortal");
+    }
 
-app.get("/biddingPortal", (req, res) => {
-    
-})
+    return res.redirect("/adminLogin");
+});
+app.post("/adminCreateOpenBid",function(req,res){
+    if(!req.session.admin){
+        return res.redirect("/adminLogin");
+    }
 
-app.get("/analytics", (req, res) => {
-    
-})
+    var contractName = req.body.contractName;
+    var highestBid = req.body.highestBid;
+    var expirationDate = req.body.expirationDate;
+    var description = req.body.description;
+    var imgSrc = req.body.imgSrc || "";
+
+    if(!contractName || !highestBid || !expirationDate || !description){
+        return res.redirect("/biddingPortal");
+    }
+
+    bidsData.addOpenBid(contractName,highestBid,expirationDate,description,imgSrc);
+    return res.redirect("/biddingPortal");
+});
+
+app.post("/adminDeleteOpenBid",function(req,res){
+    if(!req.session.admin){
+        return res.redirect("/adminLogin");
+    }
+
+    bidsData.removeOpenBid(req.body.contractName);
+    return res.redirect("/biddingPortal");
+});
+
+app.get("/biddingPortal",function(req,res){
+    if(!req.session.admin){
+        return res.redirect("/adminLogin");
+    }
+
+    res.render("main/biddingPortal.handlebars",{
+        title:"Admin Bidding Portal",
+        bids:bidsData.getAllBids(),
+        openBids:bidsData.getAllOpenBids()
+    });
+});
+
+
+app.post("/awardBid",function(req,res){
+    if(!req.session.admin){
+        return res.redirect("/adminLogin");
+    }
+
+    bidsData.awardBid(req.body.contractName,req.body.vendorName);
+    return res.redirect("/biddingPortal");
+});
+
+app.get("/analytics",function(req,res){
+    var output = bidsData.getAnalytics();
+
+    res.render("main/analytics.handlebars",{
+        title:"Analytics",
+        analytics:output
+    });
+});
 
 app.get("/questions", (req, res) => { // optional
     res.redirect("/main");
