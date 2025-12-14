@@ -19,7 +19,7 @@ function check_number(num) {
     if (typeof num !== "number" || num === NaN) {
         throw new Error('Input must be an integer');
     }
-    return num.toFixed(2);
+    return Number(num.toFixed(2)) ;
 }
 
 // ---------------------

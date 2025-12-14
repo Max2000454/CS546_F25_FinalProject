@@ -74,8 +74,22 @@ const getProposalById = async (id) => {
     return proposalObj;
 }
 
+const getProposalByTitle = async (name) => {
+    if (!name) throw "Please proivde name";
+    name = validationFunctions.check_string(name);
+    const proposalsCollection = await proposals();
+    let proposalObj = await proposalsCollection.findOne({"title" : name});
+    return proposalObj;
+}
+
 const removeProposalById = async (id) => {
     if (!id) throw `Error<removeProposalById>: Missing argument id`;
+    
+    // delete proposalId from user
+    let proposalObj = await getProposalById(id);
+    let userId = proposalObj.posted_by;
+    await userDataFunctions.removeProposalFromUser(userId, id);
+    
     const proposalsCollection = await proposals();
     let deleteInfo = await proposalsCollection.deleteOne({"_id" : id});
     if (deleteInfo) {
@@ -87,6 +101,12 @@ const removeProposalById = async (id) => {
 
 const removeProposalByTitle = async (title) => {
     if (!title) throw `Error<removeProposalByTitle>: Missing argument title`;
+    
+    // delete proposalId from user
+    let proposalObj = await getProposalByTitle(title);
+    let userId = proposalObj.posted_by;
+    await userDataFunctions.removeProposalFromUser(userId, String(proposalObj._id));
+
     const proposalsCollection = await proposals();
     let deleteInfo = await proposalsCollection.deleteOne({"title" : title});
     if (deleteInfo) {
@@ -96,19 +116,57 @@ const removeProposalByTitle = async (title) => {
     }
 }
 
+// this will run before any request to the database to get multiple proposals
+// If due_date < Date() then we'll update status from "open" to "awarded"
+const checkAllProposalDates = async () => {
+    const proposalsCollection = await proposals();
+    const now = new Date();
+
+    // find all open proposals whose due_date has passed
+    const expiredProposals = await proposalsCollection.find({
+        status: "open",
+        due_date: { $lt: now }
+    }).toArray();
+
+    if (expiredProposals.length === 0) {
+        return {
+            updatedAny: false,
+            updateCount: 0
+        };
+    }
+
+    const updateResult = await proposalsCollection.updateMany(
+        {
+            status: "open",
+            due_date: { $lt: now }
+        },
+        {
+            $set: { status: "awarded" }
+        }
+    );
+
+    return {
+        updatedAny: updateResult.modifiedCount > 0,
+        updateCount: updateResult.modifiedCount
+    };
+}
+
 const getAllProposals = async () => {
+    await checkAllProposalDates();
     const proposalsCollection = await proposals();
     let allProposals = await proposalsCollection.find({}).toArray();
     return allProposals;
 }
 
 const getAwardedProposals = async () => {
+    await checkAllProposalDates();
     const proposalsCollection = await proposals();
     let allAwardedProposals = await proposalsCollection.find({status : "awarded"}).toArray();
     return allAwardedProposals;
 }
 
 const getOpenProposals = async () => {
+    await checkAllProposalDates();
     const proposalsCollection = await proposals();
     let allOpenProposals = await proposalsCollection.find({status : "open"}).toArray();
     return allOpenProposals;
@@ -128,6 +186,7 @@ const clearProposalsCollection = async () => {
 export default {
     insertProposal,
     getProposalById,
+    getProposalByTitle,
     removeProposalById,
     removeProposalByTitle,
     getAllProposals,
