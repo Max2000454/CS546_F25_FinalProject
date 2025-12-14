@@ -76,6 +76,42 @@ function validate_email(email_address) {
     }
 }
 
+function validate_username(username) {
+    try {
+        const uname = check_string(username).trim();
+
+        // length between 3 and 20
+        if (uname.length < 3) {
+            throw new Error('Username must be at least 3 characters long');
+        }
+        if (uname.length > 20) {
+            throw new Error('Username must be at most 20 characters long');
+        }
+
+        // allowed characters: letters, numbers, underscores
+        const validChars = /^[A-Za-z0-9_]+$/;
+        if (!validChars.test(uname)) {
+            throw new Error('Username may only contain letters, numbers, and underscores');
+        }
+
+        // must start with a letter
+        if (!/^[A-Za-z]/.test(uname)) {
+            throw new Error('Username must start with a letter');
+        }
+
+        // no consecutive underscores
+        if (/__/.test(uname)) {
+            throw new Error('Username may not contain consecutive underscores');
+        }
+
+        return uname;
+    }
+    catch (e) {
+        console.error("validate_username error:", e);
+        throw e;
+    }
+}
+
 function validate_password(password) {
     try{
         const pswd = check_string(password);
@@ -133,4 +169,4 @@ function validate_date(input_date) {
     }
 }
 
-export default {check_string, check_integer, validate_id, validate_name, validate_email, validate_password, validate_date};
+export default {check_string, check_integer, validate_id, validate_name, validate_email, validate_password, validate_date, validate_username};

@@ -1,10 +1,8 @@
 import path from "path";
 import { fileURLToPath } from "url";
-import bcrypt from "bcrypt";
 import {Router} from "express";
 import { openConnection } from "../database_setup/mongoConnection.js";
 
-import vendorsData from "../data/vendorsData.js";
 import bidsData from "../data/bidsData.js";
 
 const __filename = fileURLToPath(import.meta.url);

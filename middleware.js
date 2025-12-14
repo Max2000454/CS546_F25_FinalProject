@@ -63,35 +63,35 @@ router.use("/ratingSystem", (req, res, next) => {
 // admin-only pages
 router.use("/adminCreateOpenBid", (req, res, next) => {
     if (!req.session.admin) {
-        return res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/adminDeleteOpenBid", (req, res, next) => {
     if (!req.session.admin) {
-        return res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/biddingPortal", (req, res, next) => {
     if (!req.session.admin) {
-        return res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/awardBid", (req, res, next) => {
     if (!req.session.admin) {
-        return res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/analytics", (req, res, next) => {
     if (!req.session.admin) {
-        return res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
@@ -105,7 +105,7 @@ router.use("/feedback", (req, res, next) => {
 
 router.use("/adminFeedback", (req, res, next) => {
     if (!req.session.admin) {
-        return res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
