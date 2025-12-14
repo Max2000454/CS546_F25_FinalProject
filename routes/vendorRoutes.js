@@ -94,7 +94,7 @@ router.post("/vendorLogin",async function(req,res){
     }
 
     try {
-        const userDocument = await userData.validateUserLogin(username, password);
+        const userDocument = await userData.validateUserLogin(username, password, "vendor");
 
         if(userDocument){
             req.session.vendor = username;

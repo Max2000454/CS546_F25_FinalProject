@@ -105,11 +105,16 @@ Validates vendor credentials
 - If not found, checks Jersey City API and creates record if valid
 - Returns vendor document if authentication successful
 */
-const validateUserLogin = async (username, password) => {
-    if (!username || !password) throw `Error<validateUserLogin>: please provide username or password`;
+const validateUserLogin = async (username, password, accountType) => {
+    if (!username || !password || !accountType) throw `Error<validateUserLogin>: please provide username or password`;
 
     // First, check if vendor exists in our database
     let userObj = await getUserByUsername(username);
+
+    if (!userObj) throw `Error<validateUserLogin>: No user found`;
+
+    // check account type
+    if (userObj.accountType != accountType) throw `Error<validateUserLogin>: Incorrect account type, you are not a ${accountType}`;
 
     // vendor exists in database, validate password
     const passwordMatch = await bcrypt.compare(password, userObj["password"]);
@@ -117,7 +122,7 @@ const validateUserLogin = async (username, password) => {
     if (passwordMatch) {
         return userObj;
     } else {
-        throw `Error<validateUserLogin>: Password do not match!`;
+        throw `Error<validateUserLogin>: Provided information is incorrect`;
     }
 
     /*

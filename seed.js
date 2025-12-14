@@ -1,21 +1,30 @@
 import { ObjectId } from "mongodb";
 import { closeConnection } from "./database_setup/mongoConnection.js";
 
-import usersData from "./data/usersData.js";
+import usersData from "./data/userData.js";
 //import proposalsData from "./data/proposalsData.js";
 import bidsData from "./data/bidsData2.js";
 
 const main = async () => {
+    await addVendors();
+    await addAdmins();
     await addBids();
     await closeConnection();
 }
 
 const addVendors = async () => {
+    await usersData.clearUserCollection();
+
+    await usersData.insertUser("Gamma123", "Gamer@1805", "vendor");
+    await usersData.insertUser("Max2000454", "Gamer@1805", "vendor");
+    await usersData.insertUser("Sebastian", "Gamer@1805", "vendor");
+    await usersData.insertUser("LetsGo", "Gamer@1805", "vendor");
 
 }
 
 const addAdmins = async () => {
-
+    await usersData.insertUser("SebastianPS", "Gamer@1805", "admin");
+    await usersData.insertUser("AdminGeneral", "Password123@", "admin");
 }
 
 const addProposals = async () => {

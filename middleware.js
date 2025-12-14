@@ -63,42 +63,42 @@ router.use("/ratingSystem", (req, res, next) => {
 // admin-only pages
 router.use("/adminCreateOpenBid", (req, res, next) => {
     if (!req.session.admin) {
-        res.redirect("/main?message=Must%20be%20logged%20in%20as%admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/adminDeleteOpenBid", (req, res, next) => {
     if (!req.session.admin) {
-        res.redirect("/main?message=Must%20be%20logged%20in%20as%admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/biddingPortal", (req, res, next) => {
     if (!req.session.admin) {
-        res.redirect("/main?message=Must%20be%20logged%20in%20as%admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/awardBid", (req, res, next) => {
     if (!req.session.admin) {
-        res.redirect("/main?message=Must%20be%20logged%20in%20as%admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/analytics", (req, res, next) => {
     if (!req.session.admin) {
-        res.redirect("/main?message=Must%20be%20logged%20in%20as%admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })
 
 router.use("/questions", (req, res, next) => {
     if (!req.session.admin) {
-        res.redirect("/main?message=Must%20be%20logged%20in%20as%admin");
+        res.redirect("/main?message=Must%20be%20logged%20in%20as%20admin");
     }
     next();
 })

@@ -21,14 +21,45 @@ router.get("/adminLogin",function(req,res){
     });
 });
 
-router.post("/adminLogin",function(req,res){
-    if(req.body.username === "admin" && req.body.password === "admin"){
-        req.session.admin = true;
-        return res.redirect("/biddingPortal");
+router.post("/adminLogin",async function(req,res){
+    let username = req.body.username;
+    let password = req.body.password;
+
+    if(!username || !password){
+        return res.render("main/adminLogin.handlebars",{
+            error:"Missing username or password",
+            topBarStyleSheet:"/css/topBar.css",
+            pageStyleSheet:"/css/adminLogin.css",
+            title:"Admin Login",
+        });
     }
 
-    return res.redirect("/adminLogin");
+    try {
+        const userDocument = await userData.validateUserLogin(username, password, "admin");
+
+        if(userDocument && userDocument.accountType && userDocument.accountType == "admin"){
+            req.session.admin = username;
+            return res.redirect("/biddingPortal");
+        }
+
+        return res.render("main/adminLogin.handlebars",{
+            error:"Invalid username or password",
+            topBarStyleSheet:"/css/topBar.css",
+            pageStyleSheet:"/css/adminLogin.css",
+            title:"Admin Login",
+        });
+        
+    } catch(error) {
+        console.error("Admin login error:", error);
+        return res.render("main/adminLogin.handlebars",{
+            error:`Error: ${error}`,
+            topBarStyleSheet:"/css/topBar.css",
+            pageStyleSheet:"/css/adminLogin.css",
+            title:"Admin Login",
+        })
+    }
 });
+
 router.post("/adminCreateOpenBid",function(req,res){
     var contractName = req.body.contractName;
     var highestBid = req.body.highestBid;
