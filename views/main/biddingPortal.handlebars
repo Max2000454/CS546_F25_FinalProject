@@ -6,7 +6,7 @@
 
 <h1>Admin Portal</h1>
 
-<div class="contract">
+<div id="createContractForm">
     <div class="contractHead">
         <h2>Create New Open Contract</h2>
     </div>
@@ -27,7 +27,7 @@
                 <input type="text" id="expirationDate" name="expirationDate">
             </div>
 
-            <div>
+            <div id="descriptionContainer">
                 <label for="description">Description</label>
                 <input type="text" id="description" name="description">
             </div>
@@ -52,42 +52,15 @@
         {{#each openBids}}
         <div class="contract">
             <div class="contractHead">
-                <h3>{{name}}</h3>
+                <h3>{{title}}</h3>
             </div>
             <div class="contractBody">
                 <p>Starting Bid: {{highestBid}}</p>
-                <p>Expires On: {{expirationDate}}</p>
+                <p>Expires On: {{due_date}}</p>
                 <p>{{description}}</p>
-
                 <form action="/adminDeleteOpenBid" method="POST">
-                    <input type="hidden" name="contractName" value="{{name}}">
+                    <input type="hidden" name="contractName" value="{{title}}">
                     <button type="submit">Delete Contract</button>
-                </form>
-            </div>
-        </div>
-        {{/each}}
-    </div>
-</div>
-
-<div class="contract">
-    <div class="contractHead">
-        <h2>Submitted Vendor Bids</h2>
-    </div>
-    <div class="contractBody">
-        {{#each bids}}
-        <div class="contract">
-            <div class="contractHead">
-                <h3>{{contractName}}</h3>
-            </div>
-            <div class="contractBody">
-                <p>Vendor: {{vendorName}}</p>
-                <p>Bid Amount: {{bidAmount}}</p>
-                <p>Status: {{status}}</p>
-
-                <form action="/awardBid" method="POST">
-                    <input type="hidden" name="contractName" value="{{contractName}}">
-                    <input type="hidden" name="vendorName" value="{{vendorName}}">
-                    <button type="submit">Award Bid</button>
                 </form>
             </div>
         </div>

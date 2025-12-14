@@ -21,7 +21,7 @@ const InsertBid = async (user_id, proposal_id, amount, date_posted) => {
 
     user_id = validationFunctions.validate_id(user_id);
     proposal_id = validationFunctions.validate_id(proposal_id);
-    amount = validationFunctions.check_integer(amount);
+    amount = validationFunctions.check_number(amount);
     date_posted = validationFunctions.validate_date(date_posted);
 
     // validate we are given a valid user_id and proposal_id
@@ -36,13 +36,14 @@ const InsertBid = async (user_id, proposal_id, amount, date_posted) => {
 
     const bidsCollection = await bids();
     let insertInfo = await bidsCollection.insertOne(bidObj);
-    return await GetBidById(insertInfo.insertedId);
+    return await GetBidById(String(insertInfo.insertedId));
 }
 
 const GetBidById = async (id) => {
     if (!id) throw `Error<GetBidById>: Missing argument id`;
+    id = validationFunctions.validate_id(id);
     const bidsCollection = await bids();
-    let bidObj = await bidsCollection.findOne({"_id" : id});
+    let bidObj = await bidsCollection.findOne({"_id" : new ObjectId(id)});
     if (!bidObj) throw `Error<GetBidById>: Could not find bid with id ${id}`;
     return bidObj;
 }

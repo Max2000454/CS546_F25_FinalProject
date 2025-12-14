@@ -4,7 +4,9 @@ import bcrypt from "bcrypt";
 import {Router} from "express";
 
 import userData from "../data/userData.js";
-import bidsData from "../data/bidsData.js";
+import proposalsData from "../data/proposalsData.js";
+import { proposals } from "../database_setup/mongoCollections.js";
+import validationFunctions from "../helpers/validate.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,49 +62,77 @@ router.post("/adminLogin",async function(req,res){
     }
 });
 
-router.post("/adminCreateOpenBid",function(req,res){
-    var contractName = req.body.contractName;
-    var highestBid = req.body.highestBid;
-    var expirationDate = req.body.expirationDate;
-    var description = req.body.description;
-    var imgSrc = req.body.imgSrc || "";
+router.post("/adminCreateOpenBid", async function(req,res){
+    let title = req.body.contractName;
+    let budget = req.body.highestBid;
+    let due_date = req.body.expirationDate;
+    let description = req.body.description;
+    let imgSrc = req.body.imgSrc || "";
 
-    if(!contractName || !highestBid || !expirationDate || !description){
+    if(!title || !budget || !due_date || !description){
         return res.redirect("/biddingPortal");
     }
 
-    bidsData.addOpenBid(contractName,highestBid,expirationDate,description,imgSrc);
+    // validation
+    title = validationFunctions.check_string(title);
+    budget = validationFunctions.check_number(budget);
+    due_date = validationFunctions.validate_date(due_date);
+    description = validationFunctions.check_string(description);
+    if (imgSrc !== null && imgSrc !== "") {
+        console.log(imgSrc);
+        imgSrc = validationFunctions.validate_image_link(imgSrc);
+    }
+
+    // get userid from session username
+    let user = await userData.getUserByUsername(req.session.admin);
+
+    // insert proposal
+    try {
+        await proposalsData.insertProposal(title, due_date, description, budget, imgSrc, String(user._id));
+    } catch(e) {
+        console.log(e);
+        return res.redirect("/biddingPortal");
+    }
+
+     return res.redirect("/biddingPortal");
+});
+
+router.post("/adminDeleteOpenBid",async function(req,res){
+    try {
+        await proposalsData.removeProposalByTitle(req.body.contractName);
+    } catch(e) {
+        console.log(e);
+        return res.redirect("/biddingPortal");
+    }
     return res.redirect("/biddingPortal");
 });
 
-router.post("/adminDeleteOpenBid",function(req,res){
-    bidsData.removeOpenBid(req.body.contractName);
-    return res.redirect("/biddingPortal");
-});
+router.get("/biddingPortal", async function(req,res){
+    let allProposals = await proposalsData.getAllProposals();
+    let allOpenProposals = await proposalsData.getOpenProposals();
 
-router.get("/biddingPortal",function(req,res){
     res.render("main/biddingPortal.handlebars",{
+        pageStyleSheet: "/css/biddingPortal.css",
         title:"Admin Bidding Portal",
         vendorLoggedIn: req.session.vendor,
         adminLoggedIn: req.session.admin,
-        bids:bidsData.getAllBids(),
-        openBids:bidsData.getAllOpenBids()
+        openBids: allOpenProposals
     });
 });
 
 router.post("/awardBid",function(req,res){
-    bidsData.awardBid(req.body.contractName,req.body.vendorName);
-    return res.redirect("/biddingPortal");
+    //bidsData.awardBid(req.body.contractName,req.body.vendorName);
+    //return res.redirect("/biddingPortal");
 });
 
 router.get("/analytics",function(req,res){
-    var output = bidsData.getAnalytics();
+    //var output = bidsData.getAnalytics();
 
     res.render("main/analytics.handlebars",{
         title:"Analytics",
         vendorLoggedIn: req.session.vendor,
         adminLoggedIn: req.session.admin,
-        analytics:output
+        //analytics:output
     });
 });
 
