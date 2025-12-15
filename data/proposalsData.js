@@ -2,6 +2,7 @@ import { MongoClient, ObjectId } from "mongodb";
 
 import { proposals } from "../database_setup/mongoCollections.js";
 import userDataFunctions from "./userData.js";
+import bidDataFunctions from "./bidsData.js";
 import validationFunctions from "../helpers/validate.js";
 import userData from "./userData.js";
 
@@ -89,6 +90,12 @@ const removeProposalById = async (id) => {
     let proposalObj = await getProposalById(id);
     let userId = proposalObj.posted_by;
     await userDataFunctions.removeProposalFromUser(userId, id);
+
+    // delete proposal bids
+    let bid_ids = proposalObj["bids"];
+    for (let bid_id of bid_ids) {
+        await bidDataFunctions.RemoveBidById(bid_id);
+    }
     
     const proposalsCollection = await proposals();
     let deleteInfo = await proposalsCollection.deleteOne({"_id" : id});
@@ -106,6 +113,12 @@ const removeProposalByTitle = async (title) => {
     let proposalObj = await getProposalByTitle(title);
     let userId = proposalObj.posted_by;
     await userDataFunctions.removeProposalFromUser(userId, String(proposalObj._id));
+
+    // delete proposal bids
+    let bid_ids = proposalObj["bids"];
+    for (let bid_id of bid_ids) {
+        await bidDataFunctions.RemoveBidById(bid_id);
+    }
 
     const proposalsCollection = await proposals();
     let deleteInfo = await proposalsCollection.deleteOne({"title" : title});

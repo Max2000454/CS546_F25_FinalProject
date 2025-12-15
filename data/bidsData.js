@@ -105,15 +105,64 @@ const CheckBidByUserProposalID = async (user_id, proposal_id) => {
 }
 
 const RemoveBidById = async (id) => {
-    if (!id) throw `Error<RemoveBidById>: Missing argument id`;
+    if (!id) throw "Error<RemoveBidById>: Missing argument id";
+
+    id = validationFunctions.validate_id(id);
+
     const bidsCollection = await bids();
-    let deleteInfo = await bidsCollection.deleteOne({"_id" : id});
-    if (deleteInfo) {
-        return {id : id, deleted : true}
-    } else {
-        return {id : id, deleted : false}
+    const usersCollection = await users();
+    const proposalsCollection = await proposals();
+
+    // find the bid
+    const bidObj = await bidsCollection.findOne({ _id: new ObjectId(id) });
+    if (!bidObj) {
+        return { id, deleted: false };
     }
-}
+
+    const bidId = String(bidObj._id);
+    const { user_id, proposal_id } = bidObj;
+
+    // delete bid
+    await bidsCollection.deleteOne({ _id: bidObj._id });
+
+    // remove bid from user.open_bids
+    await usersCollection.updateOne(
+        { _id: new ObjectId(user_id) },
+        { $pull: { open_bids: bidId } }
+    );
+
+    // remove bid from proposal.bids
+    await proposalsCollection.updateOne(
+        { _id: new ObjectId(proposal_id) },
+        { $pull: { bids: bidId } }
+    );
+
+    // recompute highestBid
+    const remainingBids = await bidsCollection
+        .find({ proposal_id })
+        .toArray();
+
+    let newHighestBid;
+    if (remainingBids.length === 0) {
+        const proposalObj =
+            await proposalDataFunctions.getProposalById(proposal_id);
+        newHighestBid = proposalObj.budget;
+    } else {
+        newHighestBid = Math.min(...remainingBids.map(b => b.amount));
+    }
+
+    await proposalsCollection.updateOne(
+        { _id: new ObjectId(proposal_id) },
+        { $set: { highestBid: newHighestBid } }
+    );
+
+    return {
+        id,
+        user_id,
+        proposal_id,
+        deleted: true
+    };
+};
 
 const RemoveBidByUserProposalID = async (user_id, proposal_id) => {
     if (!user_id || !proposal_id) {
