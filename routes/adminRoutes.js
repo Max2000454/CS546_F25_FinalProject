@@ -8,6 +8,7 @@ import userData from "../data/userData.js";
 import proposalsData from "../data/proposalsData.js";
 import { proposals } from "../database_setup/mongoCollections.js";
 import validationFunctions from "../helpers/validate.js";
+import analyticsFunctions from "../helpers/analytics.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -71,31 +72,33 @@ router.post("/adminCreateOpenBid", async function(req,res){
     let imgSrc = req.body.imgSrc || "";
 
     if(!title || !budget || !due_date || !description){
-        return res.redirect("/biddingPortal");
+        return res.status(400).redirect("/biddingPortal?message=Missing%20form%20arguments");
     }
 
     // validation
-    title = validationFunctions.check_string(title);
-    budget = validationFunctions.check_number(budget);
-    due_date = validationFunctions.validate_date(due_date);
-    description = validationFunctions.check_string(description);
-    if (imgSrc !== null && imgSrc !== "") {
-        console.log(imgSrc);
-        imgSrc = validationFunctions.validate_image_link(imgSrc);
+    try {
+        title = validationFunctions.check_string(title);
+        budget = validationFunctions.check_number(budget);
+        due_date = validationFunctions.validate_date(due_date);
+        description = validationFunctions.check_string(description);
+        if (imgSrc !== null && imgSrc !== "") {
+            imgSrc = validationFunctions.validate_image_link(imgSrc);
+        }
+    } catch(e) {
+        return res.status(400).redirect(`/biddingPortal?message=${e}`);
     }
 
     // get userid from session username
-    let user = await userData.getUserByUsername(req.session.admin);
-
     // insert proposal
     try {
+        let user = await userData.getUserByUsername(req.session.admin);
         await proposalsData.insertProposal(title, due_date, description, budget, imgSrc, String(user._id));
     } catch(e) {
         console.log(e);
-        return res.redirect("/biddingPortal");
+        return res.redirect(`/biddingPortal?message=${e}`);
     }
 
-     return res.redirect("/biddingPortal");
+     return res.redirect("/biddingPortal?message=successfully%20created%20proposal");
 });
 
 router.post("/adminDeleteOpenBid",async function(req,res){
@@ -103,21 +106,24 @@ router.post("/adminDeleteOpenBid",async function(req,res){
         await proposalsData.removeProposalByTitle(req.body.contractName);
     } catch(e) {
         console.log(e);
-        return res.redirect("/biddingPortal");
+        return res.redirect(`/biddingPortal?message=${e}`);
     }
-    return res.redirect("/biddingPortal");
+    return res.redirect("/biddingPortal?message=successfully%20deleted%20proposal");
 });
 
 router.get("/biddingPortal", async function(req,res){
     let allProposals = await proposalsData.getAllProposals();
     let allOpenProposals = await proposalsData.getOpenProposals();
 
+    let message = req.query.message;
+
     res.render("main/biddingPortal.handlebars",{
         pageStyleSheet: "/css/biddingPortal.css",
         title:"Admin Bidding Portal",
         vendorLoggedIn: req.session.vendor,
         adminLoggedIn: req.session.admin,
-        openBids: allOpenProposals
+        openBids: allOpenProposals,
+        error : message
     });
 });
 
@@ -126,14 +132,13 @@ router.post("/awardBid",function(req,res){
     //return res.redirect("/biddingPortal");
 });
 
-router.get("/analytics",function(req,res){
-    //var output = bidsData.getAnalytics();
-
+router.get("/analytics", async function(req,res){
+    let analyticsData = await analyticsFunctions.getAnalytics();
     res.render("main/analytics.handlebars",{
         title:"Analytics",
         vendorLoggedIn: req.session.vendor,
         adminLoggedIn: req.session.admin,
-        //analytics:output
+        analytics : analyticsData
     });
 });
 
@@ -155,6 +160,10 @@ router.get("/adminFeedback", async (req, res) => {
     res.redirect("/biddingPortal?message=Error%20loading%20feedback");
   }
 });
+
+router.get("/questions", (req, res) => {
+    return res.redirect("/adminFeedback");
+})
 
 router.get("/adminLogout", (req, res) => {
     if (req.session.admin) {

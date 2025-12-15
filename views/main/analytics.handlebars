@@ -1,12 +1,25 @@
 <div id="error">
     {{#if error}}
-    <p>{{error}}</p>
+        <p class="error">{{error}}</p>
     {{/if}}
 </div>
 
 <h2>Analytics Dashboard</h2>
 
-<div>
+<section class="analyticsContainer">
+    <h3>Overview</h3>
+    <p>Total Users: {{analytics.totalUsers}}</p>
+    <p>Total Proposals: {{analytics.totalProposals}}</p>
     <p>Total Bids Submitted: {{analytics.totalBids}}</p>
-    <p>Average Bid Value: {{analytics.averageBid}}</p>
-</div>
+</section>
+<section class="analyticsContainer">
+    <h3>Bidding Status</h3>
+    <p>Average Bid Value: ${{analytics.averageBid}}</p>
+    <p>Minimum Bid: ${{analytics.minBid}}</p>
+    <p>Maximum Bid: ${{analytics.maxBid}}</p>
+</section>
+<section class="analyticsContainer">
+    <h3>Proposal Status</h3>
+    <p>Open Proposals: {{analytics.openProposals}}</p>
+    <p>Awarded Proposals: {{analytics.awardedProposals}}</p>
+</section>
