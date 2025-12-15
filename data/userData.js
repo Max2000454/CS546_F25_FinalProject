@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 
 import { users } from "../database_setup/mongoCollections.js";
 import validationFunctions from "../helpers/validate.js";
+import proposalDataFunctions from "./proposalsData.js";
 
 /*
 {
@@ -19,6 +20,15 @@ accountType : String
 }
 */
 
+
+const getUserById = async (id) => {
+    if (!id) throw "Error<getUserById>: provide id";
+    id = validationFunctions.validate_id(id);
+    const usersCollection = await users();
+    let userObj = await usersCollection.findOne({_id : new ObjectId(id)});
+    if (!userObj) throw `Error<getUserById>: could not find user with id ${id}`;
+    return userObj;
+}
 
 /*
 INPUT:
@@ -38,6 +48,8 @@ const insertUser = async (username, password, accountType) => {
 
     username = validationFunctions.validate_username(username);
     password = validationFunctions.validate_password(password);
+
+    username = username.toLowerCase();
 
     // Check if vendor already exists in our database
     const existingUser = await getUserByUsername(username);
@@ -75,7 +87,7 @@ const insertUser = async (username, password, accountType) => {
         throw new Error("Failed to insert new user");
     }
 
-    return userObj;
+    return await getUserById(String(insertInfo.insertedId));
 };
 
 /*
@@ -88,6 +100,7 @@ Gets user from local MongoDB database
 const getUserByUsername = async (username) => {
     if (!username) throw `Error<getUserByUsername>: no username provided`;
     username = validationFunctions.validate_username(username);
+    username = username.toLowerCase();
 
     const usersCollection = await users();
     const usersDocument = await usersCollection.findOne({ "username": username });
@@ -107,6 +120,11 @@ Validates vendor credentials
 */
 const validateUserLogin = async (username, password, accountType) => {
     if (!username || !password || !accountType) throw `Error<validateUserLogin>: please provide username or password`;
+
+    username = validationFunctions.validate_username(username);
+    password = validationFunctions.validate_password(password);
+
+    username = username.toLowerCase();
 
     // First, check if vendor exists in our database
     let userObj = await getUserByUsername(username);
@@ -183,13 +201,71 @@ const clearUserCollection = async () => {
     return returnObj;
 };
 
+const addProposalToUser = async(user_id, proposal_id) => {
+    if (!user_id || !proposal_id) throw `Error<addProposalToUser>: Please provide user_id, proposal_id`;
+    user_id = validationFunctions.validate_id(user_id);
+    proposal_id = validationFunctions.validate_id(proposal_id);
+    
+    // get user + check that user is admin
+    let userObj = await getUserById(user_id);
+    if (!userObj || userObj.accountType !== "admin") throw `Error<addProposalToUser>: Invalid user id ${id} provided`;
+
+    // check proposal exists
+    let proposalObj = await proposalDataFunctions.getProposalById(proposal_id);
+    if (!proposalObj) throw `Error<addProposalToUser>: Invalid proposal id ${id} provided`;
+
+    // add proposal id to user's open_proposals
+    const usersCollection = await users();
+    let updateInfo = await usersCollection.updateOne({_id : new ObjectId(user_id)}, { $addToSet: { open_proposals: proposal_id } });
+
+    if (updateInfo.modifiedCount > 0) {
+        return {success : true};
+    } else {
+        return {success : false};
+    }
+}
+
+const removeProposalFromUser = async (user_id, proposal_id) => {
+    if (!user_id || !proposal_id) throw `Error<removeProposalFromUser>: Please provide user_id, proposal_id`;
+    user_id = validationFunctions.validate_id(user_id);
+    proposal_id = validationFunctions.validate_id(proposal_id);
+    
+    // get user + check that user is admin
+    let userObj = await getUserById(user_id);
+    if (!userObj || userObj.accountType !== "admin") {
+        throw `Error<removeProposalFromUser>: Invalid user id ${user_id} provided`;
+    }
+
+    // check proposal exists
+    let proposalObj = await proposalDataFunctions.getProposalById(proposal_id);
+    if (!proposalObj) {
+        throw `Error<removeProposalFromUser>: Invalid proposal id ${proposal_id} provided`;
+    }
+
+    // remove proposal id from user's open_proposals
+    const usersCollection = await users();
+    let updateInfo = await usersCollection.updateOne(
+        { _id: new ObjectId(user_id) },
+        { $pull: { open_proposals: proposal_id } }
+    );
+
+    if (updateInfo.modifiedCount > 0) {
+        return { success: true };
+    } else {
+        return { success: false };
+    }
+};
+
 export default {
+    getUserById,
     insertUser,
     getUserByUsername,
     validateUserLogin,
     checkUserExists,
     getUserCount,
-    clearUserCollection
+    clearUserCollection,
+    addProposalToUser,
+    removeProposalFromUser,
 }
 
 //const JERSEY_CITY_API_URL = "https://data.jerseycitynj.gov/api/explore/v2.1/catalog/datasets/vendors-directory/records";

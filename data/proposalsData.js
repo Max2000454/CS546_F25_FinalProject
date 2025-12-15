@@ -1,7 +1,10 @@
 import { MongoClient, ObjectId } from "mongodb";
 
 import { proposals } from "../database_setup/mongoCollections.js";
+import userDataFunctions from "./userData.js";
+import bidDataFunctions from "./bidsData.js";
 import validationFunctions from "../helpers/validate.js";
+import userData from "./userData.js";
 
 /*
 { 
@@ -20,199 +23,187 @@ imgSrc : String
 }
 */
 
-var bids = [];
-var awardedBids = [];
-var openBids = [];
-
-const addOpenBid = function(contractName,highestBid,expirationDate,description,imgSrc){
-    var output = {
-        name:String(contractName),
-        highestBid:String(highestBid),
-        expirationDate:String(expirationDate),
-        description:String(description),
-        imgSrc:imgSrc ? String(imgSrc) : ""
-    };
-
-    for(var x=0;x<openBids.length;x++){
-        if(openBids[x].name === output.name){
-            openBids[x] = output;
-            return output;
-        }
+const insertProposal = async (title, due_date, description, budget, imgSrc, posted_by) => {
+    // check for args
+    if (!title || !due_date || !description || !budget || !posted_by) throw `Error<insertProposal>: Must provide all arguments`;
+    
+    // validation
+    title = validationFunctions.check_string(title);
+    due_date = validationFunctions.validate_date(due_date);
+    description = validationFunctions.check_string(description);
+    budget = validationFunctions.check_number(budget);
+    
+    if (imgSrc) {
+        imgSrc = validationFunctions.validate_image_link(imgSrc);
     }
 
-    openBids.push(output);
-    return output;
-};
+    posted_by = validationFunctions.validate_id(posted_by);
+    let userObj = await userDataFunctions.getUserById(posted_by);
+    if (!userObj) throw `Error<insertProposal>: no user with id ${posted_by}`;
+    if (userObj.accountType !== "admin") throw `Error<insertProposal>: User must be of type 'admin' to submit a proposal`;
 
-const removeOpenBid = function(contractName){
-    var output = false;
-    for(var x=0;x<openBids.length;x++){
-        if(openBids[x].name === contractName){
-            openBids.splice(x,1);
-            output = true;
-            break;
-        }
+    // create proposal object
+    let proposalObject = {
+        title: title,
+        posted_by: posted_by,
+        date_posted: new Date(),
+        due_date: due_date,
+        description: description,
+        budget: budget,
+        bids: [],
+        status: "open",
+        highestBid: budget,
+        imgSrc: imgSrc
     }
-    return output;
-};
 
-var getAllOpenBids = function(){
-    var output = [];
-    for(var x=0;x<openBids.length;x++){
-        output.push(openBids[x]);
+    const proposalsCollection = await proposals();
+    let insertInfo = await proposalsCollection.insertOne(proposalObject);
+    if (!insertInfo) throw `Error<InsertProposal>: Failed to insert proposal`;
+
+    // add proposal to user's "open_proposals"
+    let succeeded = await userDataFunctions.addProposalToUser(posted_by, String(insertInfo.insertedId));
+    if (!succeeded.success) throw `Error<InsertProposal>: Failed to insert proposal ID into user ID`;
+
+    return await getProposalById(String(insertInfo.insertedId));
+}
+
+const getProposalById = async (id) => {
+    if (!id) throw "Please proivde id";
+    id = validationFunctions.validate_id(id);
+    const proposalsCollection = await proposals();
+    let proposalObj = await proposalsCollection.findOne({_id : new ObjectId(id)});
+    return proposalObj;
+}
+
+const getProposalByTitle = async (name) => {
+    if (!name) throw "Please proivde name";
+    name = validationFunctions.check_string(name);
+    const proposalsCollection = await proposals();
+    let proposalObj = await proposalsCollection.findOne({"title" : name});
+    return proposalObj;
+}
+
+const removeProposalById = async (id) => {
+    if (!id) throw `Error<removeProposalById>: Missing argument id`;
+    
+    // delete proposalId from user
+    let proposalObj = await getProposalById(id);
+    let userId = proposalObj.posted_by;
+    await userDataFunctions.removeProposalFromUser(userId, id);
+
+    // delete proposal bids
+    let bid_ids = proposalObj["bids"];
+    for (let bid_id of bid_ids) {
+        await bidDataFunctions.RemoveBidById(bid_id);
     }
-    return output;
-};
-
-
-
-
-var addBid = function(vendorName, contractName, bidAmount){
-    var output = {
-        vendorName:vendorName,
-        contractName:contractName,
-        bidAmount:String(bidAmount),
-        status:"Pending",
-        isPending:true
-    };
-    bids.push(output);
-    return output;
-};
-
-var getBidsByVendor = function(vendorName){
-    var output = [];
-    for(var x=0;x<bids.length;x++){
-        if(bids[x].vendorName === vendorName){
-            var bidCopy = {
-                name:bids[x].contractName,
-                contractName:bids[x].contractName,
-                highestBid:bids[x].bidAmount,
-                yourBid:bids[x].bidAmount,
-                expirationDate:"",
-                status:bids[x].status,
-                ongoing:(bids[x].status === "Pending"),
-                isPending:(bids[x].status === "Pending"),
-                vendorName:bids[x].vendorName,
-                bidAmount:bids[x].bidAmount
-            };
-            output.push(bidCopy);
-        }
+    
+    const proposalsCollection = await proposals();
+    let deleteInfo = await proposalsCollection.deleteOne({"_id" : id});
+    if (deleteInfo) {
+        return {id : id, deleted : true}
+    } else {
+        return {id : id, deleted : false}
     }
-    return output;
-};
+}
 
-var getAllBids = function(){
-    var output = [];
-    for(var x=0;x<bids.length;x++){
-        var bidCopy = {
-            vendorName:bids[x].vendorName,
-            contractName:bids[x].contractName,
-            bidAmount:bids[x].bidAmount,
-            status:bids[x].status,
-            isPending:(bids[x].status === "Pending")
+const removeProposalByTitle = async (title) => {
+    if (!title) throw `Error<removeProposalByTitle>: Missing argument title`;
+    
+    // delete proposalId from user
+    let proposalObj = await getProposalByTitle(title);
+    let userId = proposalObj.posted_by;
+    await userDataFunctions.removeProposalFromUser(userId, String(proposalObj._id));
+
+    // delete proposal bids
+    let bid_ids = proposalObj["bids"];
+    for (let bid_id of bid_ids) {
+        await bidDataFunctions.RemoveBidById(bid_id);
+    }
+
+    const proposalsCollection = await proposals();
+    let deleteInfo = await proposalsCollection.deleteOne({"title" : title});
+    if (deleteInfo) {
+        return {id : title, deleted : true}
+    } else {
+        return {id : title, deleted : false}
+    }
+}
+
+// this will run before any request to the database to get multiple proposals
+// If due_date < Date() then we'll update status from "open" to "awarded"
+const checkAllProposalDates = async () => {
+    const proposalsCollection = await proposals();
+    const now = new Date();
+
+    // find all open proposals whose due_date has passed
+    const expiredProposals = await proposalsCollection.find({
+        status: "open",
+        due_date: { $lt: now }
+    }).toArray();
+
+    if (expiredProposals.length === 0) {
+        return {
+            updatedAny: false,
+            updateCount: 0
         };
-        output.push(bidCopy);
     }
-    return output;
-};
 
-var withdrawBid = function(vendorName, contractName){
-    var output = false;
-    for(var x=0;x<bids.length;x++){
-        if(bids[x].vendorName === vendorName && bids[x].contractName === contractName && bids[x].status === "Pending"){
-            bids.splice(x,1);
-            output = true;
-            break;
+    const updateResult = await proposalsCollection.updateMany(
+        {
+            status: "open",
+            due_date: { $lt: now }
+        },
+        {
+            $set: { status: "awarded" }
         }
-    }
-    return output;
-};
+    );
 
-var awardBid = function(contractName, vendorName){
-    var output = null;
-
-    for(var x=0;x<bids.length;x++){
-        if(bids[x].contractName === contractName && bids[x].vendorName === vendorName){
-            bids[x].status = "Awarded";
-            bids[x].isPending = false;
-
-            var awardedContract = {
-                name:contractName,
-                awardee:vendorName,
-                amount:bids[x].bidAmount,
-                date:(new Date()).toLocaleDateString(),
-                description:"Awarded contract",
-                contractName:contractName,
-                vendorName:vendorName,
-                bidAmount:bids[x].bidAmount
-            };
-
-            awardedBids.push(awardedContract);
-            output = awardedContract;
-
-            removeOpenBid(contractName);
-            break;
-        }
-    }
-
-    return output;
-};
-
-var getAwardedBids = function(){
-    var output = [];
-    for(var x=0;x<awardedBids.length;x++){
-        output.push(awardedBids[x]);
-    }
-    return output;
-};
-
-var getAnalytics = function(){
-    var totalBidAmount = 0;
-
-    for(var x=0;x<bids.length;x++){
-        var numericBid = Number(bids[x].bidAmount);
-        if(!isNaN(numericBid)){
-            totalBidAmount = totalBidAmount + numericBid;
-        }
-    }
-
-    var output = {
-        totalBids:bids.length,
-        averageBid:(bids.length > 0 ? (totalBidAmount / bids.length) : 0)
+    return {
+        updatedAny: updateResult.modifiedCount > 0,
+        updateCount: updateResult.modifiedCount
     };
+}
 
-    return output;
-};
+const getAllProposals = async () => {
+    await checkAllProposalDates();
+    const proposalsCollection = await proposals();
+    let allProposals = await proposalsCollection.find({}).toArray();
+    return allProposals;
+}
 
-var getHighestBidForContract = function(contractName){
-    var output = null;
+const getAwardedProposals = async () => {
+    await checkAllProposalDates();
+    const proposalsCollection = await proposals();
+    let allAwardedProposals = await proposalsCollection.find({status : "awarded"}).toArray();
+    return allAwardedProposals;
+}
 
-    for(var x=0;x<bids.length;x++){
-        if(bids[x].contractName === contractName){
-            var numericBid = Number(bids[x].bidAmount);
-            if(isNaN(numericBid)){
-                numericBid = 0;
-            }
+const getOpenProposals = async () => {
+    await checkAllProposalDates();
+    const proposalsCollection = await proposals();
+    let allOpenProposals = await proposalsCollection.find({status : "open"}).toArray();
+    return allOpenProposals;
+}
 
-            if(output === null || numericBid > output){
-                output = numericBid;
-            }
-        }
+const clearProposalsCollection = async () => {
+    const proposalsCollection = await proposals();
+    let deleteInfo = await proposalsCollection.deleteMany({});
+    let returnObj = {deletedAny : false, deleteCount : 0};
+    if (deleteInfo.deletedCount > 0) {
+        returnObj.deletedAny = true;
+        returnObj.deleteCount = deleteInfo.deletedCount;
     }
-
-    return output;
-};
+    return returnObj;
+}
 
 export default {
-    addOpenBid,
-    removeOpenBid,
-    getAllOpenBids,
-    addBid,
-    getBidsByVendor,
-    getAllBids,
-    withdrawBid,
-    awardBid,
-    getAwardedBids,
-    getAnalytics,
-    getHighestBidForContract
+    insertProposal,
+    getProposalById,
+    getProposalByTitle,
+    removeProposalById,
+    removeProposalByTitle,
+    getAllProposals,
+    getAwardedProposals,
+    getOpenProposals,
+    clearProposalsCollection,
 };

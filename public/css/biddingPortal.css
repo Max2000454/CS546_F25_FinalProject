@@ -1,0 +1,18 @@
+#createContractForm {
+    max-width: 600px;
+    margin: 40px;
+    padding: 20px;
+    border: 2px solid #004380;
+    border-radius: 6px;
+    font-family: Arial, sans-serif;
+    background-color: #ffffff;
+}
+
+#createContractForm * {
+    margin-top: 10px;
+}
+
+#descriptionContainer #description {
+    width: 500px;
+    height: 100px;
+}

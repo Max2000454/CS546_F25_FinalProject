@@ -3,7 +3,8 @@ import { fileURLToPath } from "url";
 import {Router} from "express";
 import { openConnection } from "../database_setup/mongoConnection.js";
 
-import bidsData from "../data/bidsData.js";
+import proposalsDataFunctions from "../data/proposalsData.js";
+import userDataFunctions from "../data/userData.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -28,9 +29,9 @@ router.get("/main",function(req,res){
     });
 });
 
-router.get("/awardedContracts",function(req,res){
-    var output = bidsData.getAwardedBids();
-
+router.get("/awardedContracts", async function(req,res){
+    let output = await proposalsDataFunctions.getAwardedProposals();
+    
     res.render("main/awardedContracts.handlebars",{
         topBarStyleSheet:"/css/topBar.css",
         pageStyleSheet:"/css/awardedContracts.css",

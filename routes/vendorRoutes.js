@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import {Router} from "express";
 
 import userData from "../data/userData.js";
+import proposalsData from "../data/proposalsData.js";
 import bidsData from "../data/bidsData.js";
 
 const __filename = fileURLToPath(import.meta.url);
@@ -123,47 +124,43 @@ router.post("/vendorLogin",async function(req,res){
     }
 });
 
-router.get("/openBids",function(req,res){
-    var openBids = bidsData.getAllOpenBids();
-    var output = [];
-
-    for(var x=0;x<openBids.length;x++){
-        var highestBidValue = bidsData.getHighestBidForContract(openBids[x].name);
-
-        var bestBid = Number(openBids[x].highestBid);
-        if(highestBidValue !== null && highestBidValue > bestBid){
-            bestBid = highestBidValue;
-        }
-
-        output.push({
-            name:openBids[x].name,
-            highestBid:String(bestBid),
-            expirationDate:openBids[x].expirationDate,
-            description:openBids[x].description,
-            imgSrc:openBids[x].imgSrc
-        });
-    }
+router.get("/openBids", async function(req,res){
+    let message = req.query.message;
+    let openProposals = await proposalsData.getOpenProposals();
 
     res.render("main/openBids.handlebars",{
         pageStyleSheet:"/css/openBids.css",
         title:"Open Bids",
         vendorLoggedIn: req.session.vendor,
-        adminLoggedIn: req.session.admin,
-        contracts:output,
+        contracts:openProposals,
+        error:message,
     });
 });
 
 
 
-router.get("/yourBids",function(req,res){
-    var output = bidsData.getBidsByVendor(req.session.vendor);
+router.get("/yourBids", async function(req,res){
+    let message = req.query.message;
+    let vendor_username = req.session.vendor;
+    let user_obj = await userData.getUserByUsername(vendor_username);
+    let list_of_bid_ids = user_obj["open_bids"];
+
+    let vendor_bids = [];
+    for (let id of list_of_bid_ids) {
+        let bid_obj = await bidsData.GetBidById(id);
+        let prop_obj = await proposalsData.getProposalById(bid_obj["proposal_id"]);
+        let ongoing = false;
+        if (prop_obj["status"] === "open") ongoing = true;
+        vendor_bids.push({...bid_obj, ...prop_obj, ongoing: ongoing});
+    }
 
     res.render("main/yourBids.handlebars",{
         pageStyleSheet:"/css/yourBids.css",
         title:"Your Bids",
         vendorLoggedIn: req.session.vendor,
         adminLoggedIn: req.session.admin,
-        contracts:output,
+        contracts:vendor_bids,
+        error:message,
     });
 });
 
@@ -177,25 +174,38 @@ router.get("/submitBid/:contractName",function(req,res){
 
 });
 
-router.post("/submitBid/:contractName",function(req,res){
-    var bidAmount = req.body.bidAmount;
+router.post("/submitBid/:contractName", async function(req,res){
+    // check that user submitted amount for bid
+    let bidAmount = req.body.bidAmount;
     if(!bidAmount){
         return res.redirect("/openBids");
     }
 
-    bidsData.addBid(req.session.vendor,req.params.contractName,bidAmount);
-    return res.redirect("/yourBids");
+    try {
+        let user_obj = await userData.getUserByUsername(req.session.vendor);
+        let prop_obj = await proposalsData.getProposalByTitle(req.params.contractName);
+        await bidsData.InsertBid(String(user_obj._id), String(prop_obj._id), bidAmount, Date());
+    } catch(e) {
+        res.redirect(`/yourBids?message=Failed%20to%20make%20proposal%20${e}`);
+    }
+
+    return res.redirect("/yourBids?message=Success%20posting%20bid");
 });
 
 
-router.post("/withdrawBid",function(req,res){
-    bidsData.withdrawBid(req.session.vendor,req.body.contractName);
-    return res.redirect("/yourBids");
+router.post("/withdrawBid", async function(req,res){
+    try {
+        let user_obj = await userData.getUserByUsername(req.session.vendor);
+        let prop_obj = await proposalsData.getProposalByTitle(req.body.contractName);
+        await bidsData.RemoveBidByUserProposalID(String(user_obj._id), String(prop_obj._id));
+    } catch(e) {
+        res.redirect("/yourBids?message=failed%20to%20remove%20your%20bid");
+    }
+
+    return res.redirect("/yourBids?message=bid%20sucessfully%20removed");
 });
 
-router.get("/ratingSystem", (req, res) => { // optional
-    res.redirect("/main");
-})
+
 
 router.get("/vendorLogout", (req, res) => {
     if (req.session.vendor) {

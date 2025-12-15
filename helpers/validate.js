@@ -14,11 +14,12 @@ function check_string(str) {
     return trimmed;
 }
 
-function check_integer(int) {
-    if (typeof int !== 'number' || !Number.isInteger(int)) {
+function check_number(num) {
+    num = Number(num);
+    if (typeof num !== "number" || num === NaN) {
         throw new Error('Input must be an integer');
     }
-    return int;
+    return Number(num.toFixed(2)) ;
 }
 
 // ---------------------
@@ -41,16 +42,16 @@ function validate_id(id) {
 
 function validate_name(first_name, last_name) {
     try{
-        const first = check_string(first_name);
+        let first = check_string(first_name);
         if (first.length < 2 || first.length > 20){
             throw new Error('First name must be between 2 and 20 characters long');
         }
-        const last = check_string(last_name);
+        let last = check_string(last_name);
         if (last.length < 2 || last.length > 20){
             throw new Error('Last name must be between 2 and 20 characters long');
         }
 
-        return {first_name: first, last_name: last};
+        return {first_name: first.trim(), last_name: last.trim()};
     }
     catch(e){
         console.error("validate_name error: ", e);
@@ -169,4 +170,28 @@ function validate_date(input_date) {
     }
 }
 
-export default {check_string, check_integer, validate_id, validate_name, validate_email, validate_password, validate_date, validate_username};
+function validate_image_link(src) {
+    try {
+        if (!src || typeof src !== "string") {
+            throw new Error("Image link must be a string");
+        }
+
+        const url = new URL(src);
+
+        if (!["http:", "https:"].includes(url.protocol)) {
+            throw new Error("Image link must use http or https");
+        }
+
+        const imageExtensions = /\.(jpg|jpeg|png|gif|webp|bmp|svg)$/i;
+        if (!imageExtensions.test(url.pathname)) {
+            throw new Error("URL does not point to a supported image type");
+        }
+
+        return url.toString();
+    } catch (e) {
+        console.error("validate_image_link error:", e);
+        throw e;
+    }
+}
+
+export default {check_string, check_number, validate_id, validate_name, validate_email, validate_password, validate_date, validate_username, validate_image_link};
