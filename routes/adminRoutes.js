@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import {Router} from "express";
 import { openConnection } from "../database_setup/mongoConnection.js";
-import vendorsData from "../data/vendorsData.js";
+//import vendorsData from "../data/vendorsData.js";
 import userData from "../data/userData.js";
 import proposalsData from "../data/proposalsData.js";
 import { proposals } from "../database_setup/mongoCollections.js";

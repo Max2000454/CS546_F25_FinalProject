@@ -5,27 +5,36 @@
 </div>
 
 <div class="filterButtonContainer">
-    <button>Select Filters</button>
+    <input type="text" id="filterInput" placeholder="Filter contracts">
+    <button id="filterButton">Select Filters</button>
 </div>
 
 {{#each contracts}}
-<div class="contract">
+<div class="contract" data-title="{{title}}" data-description="{{description}}">
     <div class="contractHead">
         <h1>{{title}}</h1>
     </div>
+
     <div class="contractBody">
         <div class="contractInfo">
             <h2>Information</h2>
             <p>Current Highest Bid: {{highestBid}}</p>
             <p>Expires on: {{due_date}}</p>
         </div>
+
         <div class="contractDesc">
             <h2>Description</h2>
             <p>{{description}}</p>
         </div>
+
         <div class="contractImage">
-            <img src="{{imgSrc}}" alt="no image available">
+            {{#if imgSrc}}
+                <img src="{{imgSrc}}" alt="contract image">
+            {{else}}
+                <p class="noImage">No image available</p>
+            {{/if}}
         </div>
+
         <div class="placeButton">
             <form action="/submitBid/{{title}}" method="GET">
                 <button type="submit">Place Bid</button>
@@ -34,3 +43,5 @@
     </div>
 </div>
 {{/each}}
+
+<script src="/script/openBids.js"></script>
